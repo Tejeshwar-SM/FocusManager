@@ -2,6 +2,8 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import { deflate } from 'zlib';
 
+dotenv.config();
+
 const connectDB = async (): Promise<void> => {
     try {
         const mongoURI = process.env.MONGO_URI as string;
