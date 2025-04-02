@@ -12,7 +12,8 @@ import Dashboard from "./pages/Dashboard";
 import Tasks from "./pages/Tasks";
 import PomodoroTimer from "./pages/PomodoroTimer";
 import ProtectedRoute from "./components/ProtectRoutes";
-import Navbar from "./components/Navbar"; 
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 import "./App.css";
 import { AuthProvider } from "./context/AuthContext";
 
@@ -57,6 +58,7 @@ const AppContent: React.FC = () => {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
+      <Footer />
     </div>
   );
 };

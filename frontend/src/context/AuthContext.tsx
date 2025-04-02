@@ -1,47 +1,63 @@
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 import AuthService from "../services/AuthService"; // Import AuthService instead of axios
 
-//define user type
+// Define user type
 interface User {
   id: string;
   name: string;
   email: string;
 }
 
-//define context type
+// Define context type
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   error: string | null;
+  theme: "light" | "dark";
+  toggleTheme: () => void;
   register: (name: string, email: string, password: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
-//create context with default values
+// Create context with default values
 export const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: false,
   error: null,
+  theme: "light",
+  toggleTheme: () => {},
   register: async () => {},
   login: async () => {},
   logout: async () => {},
 });
 
-//props type
+// Props type
 interface AuthProviderProps {
   children: ReactNode;
 }
 
-//create provider component
+// Create provider component
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  //load user from localstorage on initial render
-  // Check auth status on initial load
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    return (localStorage.getItem("theme") as "light" | "dark") || "light";
+  });
+
+  // Toggle theme function
+  const toggleTheme = () => {
+    setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
+  };
+
+  // Load user from localStorage on initial render and apply theme
   useEffect(() => {
+    // Apply theme when it changes
+    document.body.setAttribute("data-theme", theme);
+    localStorage.setItem("theme", theme);
+
     const verifyAuth = async () => {
       try {
         const token = localStorage.getItem("accessToken");
@@ -81,9 +97,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     verifyAuth();
-  }, []);
+  }, [theme]);
 
-  //register user
+  // Register user
   const register = async (name: string, email: string, password: string) => {
     setLoading(true);
     setError(null);
@@ -110,7 +126,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  //login user
+  // Login user
   const login = async (email: string, password: string) => {
     setLoading(true);
     setError(null);
@@ -137,7 +153,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  //logout user
+  // Logout user
   const logout = async () => {
     try {
       await AuthService.logout(); // Use AuthService
@@ -153,12 +169,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, error, register, login, logout }}
+      value={{
+        user,
+        loading,
+        error,
+        theme,
+        toggleTheme,
+        register,
+        login,
+        logout,
+      }}
     >
       {children}
     </AuthContext.Provider>
   );
 };
 
-//custom hook for using auth context
+// Custom hook for using auth context
 export const useAuth = () => React.useContext(AuthContext);

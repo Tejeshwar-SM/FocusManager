@@ -1,30 +1,22 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "../styles/Navbar.css";
 
 const Navbar: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, theme, toggleTheme } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    return (localStorage.getItem("theme") as "light" | "dark") || "light";
-  });
-
-  // Apply theme when it changes
-  useEffect(() => {
-    document.body.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
-  }, [theme]);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = async () => {
-    await logout();
-    navigate("/");
-  };
-
-  const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
+    try {
+      await logout();
+      navigate("/");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   const toggleDropdown = () => {
@@ -35,16 +27,32 @@ const Navbar: React.FC = () => {
     setDropdownOpen(false);
   };
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
-    <nav className="navbar">
+    <nav className={`navbar ${theme === "dark" ? "navbar-dark" : ""}`}>
       <div className="navbar-container">
         <div className="navbar-logo">
-          <Link to={user ? "/dashboard" : "/"}>FocusManager</Link>
+          <Link to="/">FocusManager</Link>
         </div>
 
         <div className="navbar-links">
           {user ? (
-            // Nav links for authenticated users
             <>
               <Link
                 to="/dashboard"
@@ -66,21 +74,16 @@ const Navbar: React.FC = () => {
               </Link>
             </>
           ) : (
-            // Nav links for guests
             <>
               <Link
                 to="/login"
-                className={`auth-button ${
-                  location.pathname === "/login" ? "active" : ""
-                }`}
+                className={location.pathname === "/login" ? "active" : ""}
               >
                 Login
               </Link>
               <Link
                 to="/register"
-                className={`auth-button signup ${
-                  location.pathname === "/register" ? "active" : ""
-                }`}
+                className={location.pathname === "/register" ? "active" : ""}
               >
                 Register
               </Link>
@@ -90,27 +93,56 @@ const Navbar: React.FC = () => {
 
         {/* User profile dropdown for authenticated users */}
         {user && (
-          <div className="profile-dropdown">
+          <div className={`profile-dropdown ${dropdownOpen ? 'show' : ''}`} ref={dropdownRef}>
             <button className="profile-button" onClick={toggleDropdown}>
-              <span className="profile-icon">
+              <div className="profile-avatar">
                 {user.name.charAt(0).toUpperCase()}
-              </span>
+              </div>
+              <span className={`profile-name ${dropdownOpen ? 'show-full-name' : ''}`}>{dropdownOpen ? user.name : ''}</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="dropdown-icon"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
             </button>
 
             {dropdownOpen && (
               <div className="dropdown-menu">
                 <div className="dropdown-header">
-                  <span className="user-name">{user.name}</span>
-                  <span className="user-email">{user.email}</span>
+                  {/* <div className="dropdown-avatar">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div> */}
+                  <div className="dropdown-user-details">
+                    <span className="dropdown-username">{user.name}</span>
+                    <span className="dropdown-email">{user.email}</span>
+                  </div>
                 </div>
                 <div className="dropdown-divider"></div>
+                <Link to="/profile" className="dropdown-item" onClick={closeDropdown}>
+                  Profile
+                </Link>
+                <Link to="/settings" className="dropdown-item" onClick={closeDropdown}>
+                  Settings
+                </Link>
                 <button
                   className="dropdown-item theme-toggle"
-                  onClick={toggleTheme}
+                  onClick={() => {
+                    toggleTheme();
+                    closeDropdown();
+                  }}
                 >
                   {theme === "light" ? "Dark Theme" : "Light Theme"}
                 </button>
-                <button className="dropdown-item logout" onClick={handleLogout}>
+                <button className="dropdown-item logout" onClick={() => { handleLogout(); closeDropdown(); }}>
                   Logout
                 </button>
               </div>
@@ -126,5 +158,4 @@ const Navbar: React.FC = () => {
     </nav>
   );
 };
-
 export default Navbar;
