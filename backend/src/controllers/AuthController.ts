@@ -45,10 +45,10 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         accessToken,
       },
     });
-    console.log('Generated Access TOken', accessToken);
-    console.log('Generated Refresh Token', refreshToken);
-    console.log('JWT Secret', process.env.JWT_ACCESS_SECRET);
-    console.log('JWT Refresh Secret', process.env.JWT_REFRESH_SECRET);
+    console.log("Generated Access TOken", accessToken);
+    console.log("Generated Refresh Token", refreshToken);
+    console.log("JWT Secret", process.env.JWT_ACCESS_SECRET);
+    console.log("JWT Refresh Secret", process.env.JWT_REFRESH_SECRET);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
@@ -103,6 +103,32 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const getCurrentUser = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    // req.user is set by your auth middleware
+    const user = await User.findById(req.user?.id).select("-password");
+
+    if (!user) {
+      res.status(404).json({ success: false, message: "User not found" });
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 

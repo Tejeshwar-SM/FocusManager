@@ -43,10 +43,10 @@ export const protect = async (
         .json({ success: false, message: "Not authorized, no token" });
       return;
     }
-    console.log("recieved token:::", token);
+    // console.log("recieved token:::", token);
     try {
 
-      console.log("");
+      // console.log("");
       // console.log("ACCESS SECRET", process.env.JWT_ACCESS_SECRET);
 
       // Verify token

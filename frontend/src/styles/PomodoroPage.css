@@ -1,0 +1,233 @@
+.pomodoro-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+  
+  .pomodoro-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  
+  .pomodoro-header h1 {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    font-size: 2.25rem;
+  }
+  
+  .pomodoro-header p {
+    color: #7f8c8d;
+    font-size: 1.1rem;
+  }
+  
+  .timer-container {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2.5rem;
+    text-align: center;
+  }
+  
+  .session-type-selector {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  .session-type-selector button {
+    background-color: #f1f1f1;
+    border: none;
+    border-radius: 6px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #7f8c8d;
+  }
+  
+  .session-type-selector button:hover {
+    background-color: #e8e8e8;
+  }
+  
+  .session-type-selector button.active {
+    background-color: #3498db;
+    color: white;
+  }
+  
+  .timer-display {
+    font-size: 7rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 1.5rem 0 3rem;
+  }
+  
+  .timer-controls {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .timer-controls button {
+    width: 140px;
+    height: 45px;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+  }
+  
+  .start-btn {
+    background-color: #2ecc71;
+    color: white;
+  }
+  
+  .start-btn:hover {
+    background-color: #27ae60;
+  }
+  
+  .pause-btn {
+    background-color: #f39c12;
+    color: white;
+  }
+  
+  .pause-btn:hover {
+    background-color: #e67e22;
+  }
+  
+  .reset-btn {
+    background-color: #e74c3c;
+    color: white;
+  }
+  
+  .reset-btn:hover {
+    background-color: #c0392b;
+  }
+  
+  .cycle-counter {
+    margin-top: 1.5rem;
+    color: #7f8c8d;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+  
+  .session-history {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+  }
+  
+  .session-history h2 {
+    color: #2c3e50;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+    text-align: center;
+  }
+  
+  .history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+  }
+  
+  .history-date {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+  }
+  
+  .history-duration {
+    font-weight: 600;
+    color: #2c3e50;
+  }
+  
+  .history-status {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  
+  .history-status.inprogress {
+    background-color: #e8f6fd;
+    color: #3498db;
+  }
+  
+  .history-status.completed {
+    background-color: #eafaf1;
+    color: #27ae60;
+  }
+  
+  .history-status.cancelled {
+    background-color: #fdeeee;
+    color: #e74c3c;
+  }
+  
+  .no-history {
+    text-align: center;
+    padding: 2rem 0;
+    color: #95a5a6;
+  }
+  
+  .loading {
+    text-align: center;
+    padding: 2rem;
+    color: #7f8c8d;
+    font-style: italic;
+  }
+  
+  /* Timer animation */
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+  
+  .timer-display {
+    animation: pulse 2s infinite ease-in-out;
+    animation-play-state: paused;
+  }
+  
+  .timer-display.active {
+    animation-play-state: running;
+  }
+  
+  @media (max-width: 600px) {
+    .timer-display {
+      font-size: 5rem;
+    }
+    
+    .session-type-selector {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .timer-controls {
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .timer-controls button {
+      width: 100%;
+    }
+    
+    .history-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+  }

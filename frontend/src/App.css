@@ -54,3 +54,172 @@
   margin-top: 0;
   color: #34495e;
 }
+
+.main-content {
+  padding-top: 1rem;
+}
+
+
+.app-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100%;
+}
+
+.loading-spinner {
+  padding: 1.5rem;
+  text-align: center;
+  color: #3498db;
+  font-size: 1.25rem;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 60px);
+  width: 100%;
+}
+
+/* Dark Theme */
+/* General theme-related styles */
+body[data-theme='dark'] {
+  background-color: #1a202c;
+  color: #e2e8f0;
+}
+
+body[data-theme='dark'] .app {
+  background-color: #1a202c;
+}
+
+/* Dashboard styles for dark theme */
+body[data-theme='dark'] .dashboard-container .dashboard-header h1,
+body[data-theme='dark'] .section-header h2 {
+  color: #e2e8f0;
+}
+
+body[data-theme='dark'] .stat-card {
+  background-color: #2d3748;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+body[data-theme='dark'] .stat-number {
+  color: #e2e8f0;
+}
+
+body[data-theme='dark'] .task-card {
+  background-color: #2d3748;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+body[data-theme='dark'] .task-card h3 {
+  color: #e2e8f0;
+}
+
+body[data-theme='dark'] .action-button {
+  background-color: #2d3748;
+  color: #e2e8f0;
+  border-color: #4a5568;
+}
+
+body[data-theme='dark'] .action-button:hover {
+  background-color: #4a5568;
+}
+
+body[data-theme='dark'] .action-button.primary {
+  background-color: #4299e1;
+}
+
+body[data-theme='dark'] .action-button.primary:hover {
+  background-color: #3182ce;
+}
+
+/* Tasks page styles for dark theme */
+body[data-theme='dark'] .tasks-page .tasks-header h1 {
+  color: #e2e8f0;
+}
+
+body[data-theme='dark'] .create-task-form {
+  background-color: #2d3748;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+body[data-theme='dark'] .create-task-form h2 {
+  color: #e2e8f0;
+}
+
+body[data-theme='dark'] .form-group input,
+body[data-theme='dark'] .form-group textarea,
+body[data-theme='dark'] .form-group select {
+  background-color: #4a5568;
+  border-color: #4a5568;
+  color: #e2e8f0;
+}
+
+body[data-theme='dark'] .task-filters {
+  background-color: #2d3748;
+}
+
+body[data-theme='dark'] .task-filters button {
+  color: #a0aec0;
+}
+
+body[data-theme='dark'] .task-filters button:hover {
+  background-color: #4a5568;
+}
+
+body[data-theme='dark'] .task-item {
+  background-color: #2d3748;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Pomodoro page styles for dark theme */
+body[data-theme='dark'] .pomodoro-page .pomodoro-header h1 {
+  color: #e2e8f0;
+}
+
+body[data-theme='dark'] .timer-container {
+  background-color: #2d3748;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+}
+
+body[data-theme='dark'] .session-type-selector button {
+  background-color: #4a5568;
+  color: #a0aec0;
+}
+
+body[data-theme='dark'] .session-type-selector button:hover {
+  background-color: #2d3748;
+}
+
+body[data-theme='dark'] .timer-display {
+  color: #e2e8f0;
+}
+
+body[data-theme='dark'] .session-history {
+  background-color: #2d3748;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+}
+
+body[data-theme='dark'] .history-item {
+  background-color: #4a5568;
+}
+
+/* Auth pages styles for dark theme */
+body[data-theme='dark'] .auth-container .auth-card {
+  background-color: #2d3748;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+body[data-theme='dark'] .auth-container h2,
+body[data-theme='dark'] .auth-container label {
+  color: #e2e8f0;
+}
+
+body[data-theme='dark'] .auth-container input {
+  background-color: #4a5568;
+  border-color: #4a5568;
+  color: #e2e8f0;
+}

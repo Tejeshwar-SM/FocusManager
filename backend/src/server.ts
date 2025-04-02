@@ -7,7 +7,7 @@ import connectDB from "./config/db";
 import AuthRoutes from "./routes/AuthRoutes";
 import TaskRoutes from "./routes/TaskRoutes";
 import PomodoroRoutes from "./routes/PomodoroRoutes";
-import { ppid } from "process";
+// import { ppid } from "process";
 dotenv.config();
 
 const app: Express = express();
@@ -33,7 +33,13 @@ app.get("/", (req: Request, res: Response) => {
   console.log("Authorization Header:", req.headers.authorization);
 });
 
-
+app.get("/api", (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    message: "Focus Manager API is running!",
+    version: "1.0.0"
+  });
+});
 
 
 //routes
