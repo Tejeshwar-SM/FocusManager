@@ -1,0 +1,43 @@
+.session-type-selector {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .session-type-selector button {
+    background: transparent;
+    border: none;
+    padding: 0.75rem 1rem;
+    margin: 0 0.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    color: #555;
+    transition: all 0.2s ease;
+  }
+  
+  .session-type-selector button:hover:not(:disabled) {
+    background-color: #f0f4ff;
+    color: #4361ee;
+  }
+  
+  .session-type-selector button.active {
+    background-color: #4361ee;
+    color: white;
+    font-weight: 500;
+  }
+  
+  .session-type-selector button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  
+  [data-theme="dark"] .session-type-selector button:hover:not(:disabled) {
+    background-color: #3a3a3a;
+    color: #7b9fff;
+  }
+  
+  [data-theme="dark"] .session-type-selector button {
+    color: #e5e5e5;
+  }
+  

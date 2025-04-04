@@ -1,0 +1,11 @@
+.cycle-counter {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 1.1rem;
+    color: #666;
+  }
+  
+  [data-theme="dark"] .cycle-counter {
+    color: #aaa;
+  }
+  

@@ -1,8 +1,17 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import PomodoroService from "../services/PomodoroService";
-import TaskService from "../services/TaskService";
-import { SessionStatus, Task, TaskStatus } from "../types/TaskTypes";
-import "../styles/PomodoroPage.css";
+import PomodoroService from "../../services/PomodoroService";
+import TaskService from "../../services/TaskService";
+import { Task } from "../../types/TaskTypes";
+import SessionTypeSelector from "./SessionTypeSelector";
+import TimerDisplay from "./TimerDisplay";
+import TimerControls from "./TimerControls";
+import TaskInput from "./TaskInput";
+import TimerSettings from "./TimerSettings";
+import TaskHistory from "./TaskHistory";
+import SessionHistory from "./SessionHistory";
+import CustomTimeModal from "./CustomTimeModal";
+import CycleCounter from "./CycleCounter";
+import "../../styles/pomodoro/PomodoroPage.css";
 
 const PomodoroPage: React.FC = () => {
   const [timer, setTimer] = useState({
@@ -55,7 +64,7 @@ const PomodoroPage: React.FC = () => {
       const response = await TaskService.getTasks();
       // Filter to only show non-completed tasks
       const activeTasks = response.data.data.filter(
-        (task: Task) => task.status !== TaskStatus.COMPLETED
+        (task: Task) => task.status !== "completed"
       );
       setAvailableTasks(activeTasks);
     } catch (error) {
@@ -127,7 +136,6 @@ const PomodoroPage: React.FC = () => {
 
           // Update cycles count
           setCycles((prev) => prev + 1);
-
           // Refresh session history
           fetchSessionHistory();
         } catch (error) {
@@ -284,7 +292,6 @@ const PomodoroPage: React.FC = () => {
     setIsActive(false);
     setIsPaused(false);
     setTimerCompleted(false);
-
     // Reset timer based on current session type
     if (sessionType === "focus") {
       setTimer({ minutes: customTime, seconds: 0 });
@@ -300,7 +307,6 @@ const PomodoroPage: React.FC = () => {
     return `${minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
   };
 
-  // Update custom time
   const handleCustomTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
     if (!isNaN(value) && value >= 1 && value <= 180) {
@@ -356,15 +362,6 @@ const PomodoroPage: React.FC = () => {
     }
   };
 
-  // Function to format status correctly
-  const formatStatus = (status: string) => {
-    if (status.toLowerCase() === "inprogress") {
-      return "In Progress";
-    }
-    // Capitalize first letter
-    return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
-  };
-
   // Handle clicking outside the dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -388,204 +385,64 @@ const PomodoroPage: React.FC = () => {
       </header>
 
       <div className="timer-container">
-        <div className="session-type-selector">
-          <button
-            className={sessionType === "focus" ? "active" : ""}
-            onClick={() => handleSwitchSessionType("focus")}
-            disabled={isActive}
-          >
-            Focus
-          </button>
-          <button
-            className={sessionType === "short" ? "active" : ""}
-            onClick={() => handleSwitchSessionType("short")}
-            disabled={isActive}
-          >
-            Short Break
-          </button>
-          <button
-            className={sessionType === "long" ? "active" : ""}
-            onClick={() => handleSwitchSessionType("long")}
-            disabled={isActive}
-          >
-            Long Break
-          </button>
-        </div>
+        <SessionTypeSelector 
+          sessionType={sessionType} 
+          onSwitchType={handleSwitchSessionType} 
+          isActive={isActive} 
+        />
 
-        {/* Current task input with dropdown */}
-        <div className="task-input-container">
-          <input
-            type="text"
-            placeholder="What are you working on?"
-            value={currentTask}
-            onChange={handleTaskChange}
-            onFocus={() => setShowTaskDropdown(true)}
-            disabled={isActive && !isPaused}
-            className="task-input"
-          />
-          {showTaskDropdown && availableTasks.length > 0 && (
-            <div className="task-dropdown">
-              {availableTasks
-                .filter((task) =>
-                  task.title
-                    .toLowerCase()
-                    .includes(currentTask.toLowerCase() || "")
-                )
-                .map((task) => (
-                  <div
-                    key={task._id}
-                    className="task-option"
-                    onClick={() => handleTaskSelect(task)}
-                  >
-                    <span className="task-title">{task.title}</span>
-                    <span
-                      className={`task-priority priority-${task.priority.toLowerCase()}`}
-                    >
-                      {task.priority}
-                    </span>
-                  </div>
-                ))}
-            </div>
-          )}
-        </div>
+        <TaskInput 
+          currentTask={currentTask}
+          onChange={handleTaskChange}
+          onSelect={handleTaskSelect}
+          availableTasks={availableTasks}
+          showDropdown={showTaskDropdown}
+          isDisabled={isActive && !isPaused}
+        />
 
-        <div className={`timer-display ${timerCompleted ? "completed" : ""}`}>
-          <span>{formatTime(timer.minutes, timer.seconds)}</span>
-        </div>
+        <TimerDisplay 
+          minutes={timer.minutes} 
+          seconds={timer.seconds} 
+          completed={timerCompleted} 
+        />
 
-        <div className="timer-settings">
-          <button
-            onClick={() => setShowCustomTimeModal(true)}
-            disabled={isActive}
-          >
-            <span role="img" aria-label="Settings">
-              ⚙️
-            </span>{" "}
-            Custom Time
-          </button>
-          <button
-            onClick={toggleSound}
-            className={!soundEnabled ? "disabled" : ""}
-          >
-            <span role="img" aria-label="Sound">
-              {soundEnabled ? "🔊" : "🔇"}
-            </span>
-          </button>
-        </div>
+        <TimerSettings 
+          onCustomTimeClick={() => setShowCustomTimeModal(true)} 
+          onSoundToggle={toggleSound} 
+          soundEnabled={soundEnabled} 
+          isActive={isActive} 
+        />
 
-        <div className="timer-controls">
-          {!isActive || isPaused ? (
-            <button className="start-btn" onClick={startTimer}>
-              {isPaused ? "Resume" : timerCompleted ? "Restart" : "Start"}
-            </button>
-          ) : (
-            <button className="pause-btn" onClick={pauseTimer}>
-              Pause
-            </button>
-          )}
-          <button className="reset-btn" onClick={resetTimer}>
-            Reset
-          </button>
-        </div>
+        <TimerControls 
+          isActive={isActive} 
+          isPaused={isPaused} 
+          timerCompleted={timerCompleted} 
+          onStart={startTimer} 
+          onPause={pauseTimer} 
+          onReset={resetTimer} 
+        />
 
-        <div className="cycle-counter">
-          <span>Completed Cycles: {cycles}</span>
-        </div>
+        <CycleCounter cycles={cycles} />
       </div>
 
-      {/* Task history display */}
       {taskHistory.length > 0 && (
-        <div className="task-history">
-          <h3>Completed Tasks</h3>
-          <ul>
-            {taskHistory.map((item, index) => (
-              <li key={index}>
-                <span className="task-name">{item.task}</span>
-                <span className="task-time">
-                  {item.timestamp.toLocaleTimeString()}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <TaskHistory taskHistory={taskHistory} />
       )}
 
-      <div className="session-history">
-        <h2>Recent Sessions</h2>
+      <SessionHistory 
+        history={history} 
+        loading={loading} 
+      />
 
-        {loading ? (
-          <div className="loading">Loading session history...</div>
-        ) : (
-          <div className="history-list">
-            {history.length > 0 ? (
-              history.slice(0, 5).map((session) => (
-                <div key={session._id} className="history-item">
-                  <div className="history-info">
-                    <div className="history-date">
-                      {new Date(session.startTime).toLocaleString()}
-                    </div>
-                    <div className="history-task">
-                      {session.task || "No task specified"}
-                    </div>
-                  </div>
-                  <div className="history-details">
-                    <div className="history-duration">
-                      {session.duration} minutes
-                    </div>
-                    <div
-                      className={`history-status ${session.status.toLowerCase()}`}
-                    >
-                      {formatStatus(session.status)}
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="no-history">No sessions recorded yet.</p>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Custom time modal */}
       {showCustomTimeModal && (
-        <div className="custom-time-modal">
-          <div className="modal-content">
-            <h3>Set Custom Timer</h3>
-            <div className="time-input-container">
-              <label>
-                Focus Duration (1-180 minutes):
-                <input
-                  type="number"
-                  min="1"
-                  max="180"
-                  value={customTime}
-                  onChange={handleCustomTimeChange}
-                />
-              </label>
-              <div className="preset-times">
-                <button onClick={() => setCustomTime(15)}>15m</button>
-                <button onClick={() => setCustomTime(25)}>25m</button>
-                <button onClick={() => setCustomTime(30)}>30m</button>
-                <button onClick={() => setCustomTime(45)}>45m</button>
-                <button onClick={() => setCustomTime(60)}>60m</button>
-              </div>
-            </div>
-            <div className="modal-actions">
-              <button onClick={() => setShowCustomTimeModal(false)}>
-                Cancel
-              </button>
-              <button onClick={saveCustomTime}>Save</button>
-            </div>
-          </div>
-          <div
-            className="modal-backdrop"
-            onClick={() => setShowCustomTimeModal(false)}
-          />
-        </div>
+        <CustomTimeModal 
+          customTime={customTime} 
+          onChange={handleCustomTimeChange} 
+          onSave={saveCustomTime} 
+          onClose={() => setShowCustomTimeModal(false)} 
+        />
       )}
 
-      {/* Audio element for bell sound */}
       <audio
         ref={audioRef}
         src="/sounds/achievement-bell.wav"

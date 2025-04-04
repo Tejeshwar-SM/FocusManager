@@ -9,7 +9,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
-import PomodoroPage from "./pages/PomodoroPage";
+import PomodoroPage from "./components/pomodoro/PomodoroPage";
 import TasksPage from "./pages/TasksPage";
 
 import ProtectedRoute from "./components/ProtectRoutes";
