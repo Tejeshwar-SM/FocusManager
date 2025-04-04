@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import TaskService from "../services/TaskService";
 import { TaskPriority, TaskStatus } from "../types/TaskTypes";
 import "../styles/Tasks.css";
@@ -96,12 +97,17 @@ const TasksPage: React.FC = () => {
     <div className="tasks-page">
       <header className="tasks-header">
         <h1>My Tasks</h1>
-        <button
-          className="create-task-btn"
-          onClick={() => setIsCreating(!isCreating)}
-        >
-          {isCreating ? "Cancel" : "Create New Task"}
-        </button>
+        <div className="header-actions">
+          <Link to="/pomodoro" className="pomodoro-link">
+            Go to Pomodoro Timer
+          </Link>
+          <button
+            className="create-task-btn"
+            onClick={() => setIsCreating(!isCreating)}
+          >
+            {isCreating ? "Cancel" : "Create New Task"}
+          </button>
+        </div>
       </header>
 
       {error && <div className="error-message">{error}</div>}
@@ -222,13 +228,24 @@ const TasksPage: React.FC = () => {
 
                 <div className="task-actions">
                   {task.status !== TaskStatus.COMPLETED && (
-                    <button
-                      className="complete-btn"
-                      onClick={() => handleCompleteTask(task._id)}
-                      title="Mark as completed"
-                    >
-                      ✓
-                    </button>
+                    <>
+                      <button
+                        className="complete-btn"
+                        onClick={() => handleCompleteTask(task._id)}
+                        title="Mark as completed"
+                      >
+                        ✓
+                      </button>
+                      <Link
+                        to={`/pomodoro?task=${encodeURIComponent(
+                          task.title
+                        )}&id=${task._id}`}
+                        className="pomodoro-btn"
+                        title="Focus on this task"
+                      >
+                        ▶
+                      </Link>
+                    </>
                   )}
 
                   <button

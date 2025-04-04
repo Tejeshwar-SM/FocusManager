@@ -20,7 +20,7 @@ const Home: React.FC = () => {
 
     return (
         <div className="home">
-            <h1>Focus Manager</h1>
+            <h1>FocusBuddy</h1>
             <p>Your productivity assistant</p>
 
             <div className="api-status">

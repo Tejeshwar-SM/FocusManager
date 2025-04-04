@@ -36,6 +36,8 @@ export interface PomodoroSession {
   duration: number;
   completedCycles: number;
   status: SessionStatus;
+  taskName?: string;
+  taskId?: string;
   createdAt: string;
   updatedAt: string;
 }

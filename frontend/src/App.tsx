@@ -9,8 +9,9 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
-import Tasks from "./pages/Tasks";
-import PomodoroTimer from "./pages/PomodoroTimer";
+import PomodoroPage from "./pages/PomodoroPage";
+import TasksPage from "./pages/TasksPage";
+
 import ProtectedRoute from "./components/ProtectRoutes";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -41,7 +42,7 @@ const AppContent: React.FC = () => {
             path="/tasks"
             element={
               <ProtectedRoute>
-                <Tasks />
+                <TasksPage />
               </ProtectedRoute>
             }
           />
@@ -49,7 +50,7 @@ const AppContent: React.FC = () => {
             path="/pomodoro"
             element={
               <ProtectedRoute>
-                <PomodoroTimer />
+                <PomodoroPage />
               </ProtectedRoute>
             }
           />

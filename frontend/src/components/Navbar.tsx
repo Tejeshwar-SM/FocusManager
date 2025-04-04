@@ -48,7 +48,7 @@ const Navbar: React.FC = () => {
     <nav className={`navbar ${theme === "dark" ? "navbar-dark" : ""}`}>
       <div className="navbar-container">
         <div className="navbar-logo">
-          <Link to="/">FocusManager</Link>
+          <Link to="/">FocusBuddy</Link>
         </div>
 
         <div className="navbar-links">

@@ -25,6 +25,10 @@ const PomodoroService = {
     return api.get("/pomodoro", { params });
   },
 
+  updateSession(sessionId: string, data: any) {
+    return api.put(`/pomodoro/${sessionId}`, data);
+  },
+
   // Get session statistics
   getStats: () => {
     return api.get("/pomodoro/stats");
