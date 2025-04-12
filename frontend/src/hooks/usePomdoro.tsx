@@ -103,17 +103,17 @@ const usePomodoro = () => {
         await PomodoroService.completeSession(currentSessionId, {
           completedCycles: 1,
         });
-        
+
         if (currentTask) {
           try {
             await PomodoroService.updateSession(currentSessionId, {
-              task: currentTask
+              task: currentTask,
             });
           } catch (updateError) {
             console.error("Error updating session task:", updateError);
           }
         }
-        
+
         setCurrentSessionId(null);
         setCycles((prev) => prev + 1);
         fetchSessionHistory();

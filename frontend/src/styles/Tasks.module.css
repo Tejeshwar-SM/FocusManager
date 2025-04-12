@@ -1,0 +1,421 @@
+/* Tasks.module.css */
+
+.tasksPage {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--spacing-8) var(--spacing-4); /* Use variables */
+  font-family: inherit; /* Inherit from body */
+}
+
+/* Header */
+.tasksHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-8);
+  padding-bottom: var(--spacing-4);
+  border-bottom: 1px solid var(--color-border); /* Use variable */
+}
+
+.tasksHeader h1 {
+  font-size: 2rem; /* Keep specific font sizes if desired */
+  color: var(--color-text); /* Use variable */
+  font-weight: 700;
+  margin: 0;
+}
+
+.headerActions {
+  display: flex;
+  gap: var(--spacing-4); /* Use variable */
+  align-items: center;
+}
+
+/* Style buttons consistently */
+.pomodoroLink,
+.toggleCreateBtn {
+  background-color: var(--color-primary); /* Use variable */
+  color: white;
+  text-decoration: none;
+  padding: var(--spacing-3) var(--spacing-5); /* Use variable */
+  border-radius: var(--border-radius-md); /* Use variable */
+  font-weight: 600; /* Increased consistency */
+  font-size: 0.9rem; /* Consistent font size */
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast); /* Use variable */
+}
+
+.pomodoroLink:hover,
+.toggleCreateBtn:hover {
+  background-color: var(--color-primary-dark); /* Use variable */
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md); /* Use variable */
+}
+
+/* Error message */
+.errorMessage {
+  background-color: var(--color-danger-light); /* Use variable */
+  color: var(--color-danger); /* Use variable */
+  padding: var(--spacing-3) var(--spacing-4); /* Use variable */
+  border-radius: var(--border-radius-md); /* Use variable */
+  margin-bottom: var(--spacing-4); /* Use variable */
+  border-left: 4px solid var(--color-danger); /* Use variable */
+  font-weight: 500;
+}
+
+/* Create task form */
+.createTaskForm {
+  background-color: var(--color-surface); /* Use variable */
+  border-radius: var(--border-radius-xl); /* Use variable */
+  padding: var(--spacing-6); /* Use variable */
+  margin-bottom: var(--spacing-8); /* Use variable */
+  box-shadow: var(--shadow-md); /* Use variable */
+  border: 1px solid var(--color-border); /* Use variable */
+}
+
+.createTaskForm h2 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-5); /* Use variable */
+  font-size: 1.5rem;
+  color: var(--color-text); /* Use variable */
+  font-weight: 600;
+}
+
+.formGroup {
+  margin-bottom: var(--spacing-5); /* Use variable */
+}
+
+.formRow {
+  display: flex;
+  gap: var(--spacing-4); /* Use variable */
+  margin-bottom: var(--spacing-5); /* Use variable */
+}
+
+.formRow .formGroup {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: var(--spacing-2); /* Use variable */
+  font-weight: 600; /* Increased weight */
+  color: var(--color-text-secondary); /* Use variable */
+  font-size: 0.875rem; /* Slightly smaller label */
+}
+
+.formGroup input,
+.formGroup select,
+.formGroup textarea {
+  width: 100%;
+  padding: var(--spacing-3); /* Use variable */
+  border: 1px solid var(--color-border); /* Use variable */
+  border-radius: var(--border-radius-md); /* Use variable */
+  font-size: 0.95rem;
+  background-color: var(--color-surface); /* Explicit background for inputs */
+  color: var(--color-text); /* Use variable */
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast); /* Use variable */
+}
+/* Ensure textarea has same bg */
+.formGroup textarea {
+  background-color: var(--color-surface);
+}
+
+.formGroup input:focus,
+.formGroup select:focus,
+.formGroup textarea:focus {
+  outline: none;
+  border-color: var(--color-primary); /* Use variable */
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2); /* Consistent focus ring */
+}
+
+.formActions {
+  display: flex; /* Use flex for better alignment */
+  justify-content: flex-end; /* Align buttons right */
+  gap: var(--spacing-3); /* Use variable */
+  margin-top: var(--spacing-6); /* Add margin top */
+}
+
+/* General Form Button style */
+.formButton {
+  border: none;
+  border-radius: var(--border-radius-md); /* Use variable */
+  padding: var(--spacing-3) var(--spacing-6); /* Use variable */
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast); /* Use variable */
+}
+
+.formButton:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md); /* Use variable */
+}
+
+.submitBtn {
+  background-color: var(--color-success); /* Use variable */
+  color: white;
+}
+.submitBtn:hover {
+  background-color: #059669; /* Darker success shade */
+}
+
+.cancelBtn {
+  background-color: transparent;
+  color: var(--color-text-secondary); /* Use variable */
+  border: 1px solid var(--color-border); /* Use variable */
+}
+.cancelBtn:hover {
+  background-color: var(--color-surface-hover); /* Use variable */
+  border-color: var(--color-text-tertiary);
+}
+
+
+/* Task filters */
+.taskFilters {
+  display: flex;
+  gap: var(--spacing-3); /* Use variable */
+  margin-bottom: var(--spacing-6); /* Use variable */
+  padding-bottom: var(--spacing-4); /* Add padding below */
+  border-bottom: 1px solid var(--color-border); /* Add subtle separator */
+}
+
+.filterButton { /* Renamed */
+  background-color: transparent; /* Changed default */
+  border: 1px solid var(--color-border); /* Use variable */
+  color: var(--color-text-secondary); /* Use variable */
+  border-radius: var(--border-radius-md); /* Use variable */
+  padding: var(--spacing-2) var(--spacing-4); /* Use variable */
+  font-size: 0.9rem;
+  font-weight: 500; /* Slightly lighter weight */
+  cursor: pointer;
+  transition: all var(--transition-fast); /* Use variable */
+}
+
+.filterButton:hover {
+  background-color: var(--color-surface-hover); /* Use variable */
+  border-color: var(--color-text-tertiary);
+  color: var(--color-text);
+}
+
+.filterButton.active {
+  background-color: var(--color-primary); /* Use variable */
+  color: white;
+  border-color: var(--color-primary); /* Use variable */
+  font-weight: 600; /* Make active bolder */
+}
+
+/* Loading indicator */
+.loading {
+  text-align: center;
+  padding: var(--spacing-8); /* Use variable */
+  color: var(--color-text-secondary); /* Use variable */
+  font-style: italic;
+  font-size: 1rem;
+}
+
+/* Task list */
+.tasksList { /* Renamed */
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4); /* Use variable */
+}
+
+.taskItem { /* Renamed */
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start; /* Align content top */
+  background-color: var(--color-surface); /* Use variable */
+  border-radius: var(--border-radius-lg); /* Use variable */
+  padding: var(--spacing-5); /* Use variable */
+  box-shadow: var(--shadow-sm); /* Use variable */
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast); /* Use variable */
+  border: 1px solid var(--color-border); /* Add subtle border */
+  /* Removed left border - using status styles below */
+}
+
+.taskItem:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md); /* Use variable */
+}
+
+/* Task status styling */
+.taskItem.completed {
+  background-color: var(--color-surface-hover); /* Slightly different bg for completed */
+  opacity: 0.7; /* Make completed tasks slightly faded */
+}
+
+.taskContent {
+  flex: 1;
+  padding-right: var(--spacing-4); /* Use variable */
+}
+
+.taskContent h3 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-2); /* Use variable */
+  color: var(--color-text); /* Use variable */
+  font-size: 1.1rem;
+  font-weight: 600; /* Bolder title */
+}
+
+.taskItem.completed .taskContent h3 {
+  text-decoration: line-through;
+  color: var(--color-text-secondary); /* Use variable */
+}
+
+.taskContent p { /* Description */
+  margin: var(--spacing-2) 0; /* Use variable */
+  color: var(--color-text-secondary); /* Use variable */
+  font-size: 0.95rem;
+  line-height: 1.5; /* Adjusted line height */
+}
+
+.taskMeta {
+  display: flex;
+  flex-wrap: wrap; /* Allow wrapping */
+  align-items: center;
+  gap: var(--spacing-4); /* Use variable */
+  margin-top: var(--spacing-3); /* Use variable */
+  font-size: 0.85rem;
+  color: var(--color-text-tertiary); /* Use variable */
+}
+
+.priority {
+  display: inline-flex; /* Use flex for icon alignment if added */
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-1) var(--spacing-2); /* Use variable */
+  border-radius: var(--border-radius-md); /* Use variable */
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem; /* Consistent size */
+}
+
+/* Priority styles using variables */
+.priority.low { background-color: var(--color-info-light); color: var(--color-info); }
+.priority.medium { background-color: var(--color-warning-light); color: var(--color-warning); }
+.priority.high { background-color: var(--color-danger-light); color: var(--color-danger); }
+
+.dueDate { /* Renamed */
+  /* Style is inherited from .taskMeta */
+}
+
+.taskActions {
+  display: flex;
+  gap: var(--spacing-2); /* Use variable */
+  align-items: center; /* Align vertically */
+}
+
+.actionButton { /* Renamed */
+  background: none;
+  border: none;
+  font-size: 1rem; /* Adjust icon size if needed */
+  width: 36px; /* Consistent size */
+  height: 36px; /* Consistent size */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text-tertiary); /* Default icon color */
+  transition: background-color var(--transition-fast), color var(--transition-fast); /* Use variable */
+}
+
+.actionButton:hover {
+  background-color: var(--color-surface-hover); /* Use variable */
+}
+
+.completeBtn { /* Renamed */
+  color: var(--color-success); /* Use variable */
+}
+.completeBtn:hover {
+  background-color: var(--color-success-light); /* Use variable */
+  color: var(--color-success); /* Ensure color stays */
+}
+
+.pomodoroBtn { /* Renamed */
+  color: var(--color-primary); /* Use variable */
+  text-decoration: none; /* Remove underline if it's a Link */
+}
+.pomodoroBtn:hover {
+  background-color: rgba(79, 70, 229, 0.1); /* Use variable or rgba */
+  color: var(--color-primary);
+}
+
+.deleteBtn { /* Renamed */
+  color: var(--color-danger); /* Use variable */
+}
+.deleteBtn:hover {
+  background-color: var(--color-danger-light); /* Use variable */
+  color: var(--color-danger);
+}
+
+/* No tasks state */
+.noTasks { /* Renamed */
+  text-align: center;
+  padding: var(--spacing-12) var(--spacing-4); /* Use variable */
+  color: var(--color-text-secondary); /* Use variable */
+  border: 1px dashed var(--color-border); /* Use variable */
+  border-radius: var(--border-radius-lg); /* Use variable */
+  background-color: var(--color-surface); /* Use variable */
+  margin-top: var(--spacing-4); /* Add some margin */
+}
+
+.noTasks p {
+  margin-bottom: var(--spacing-4); /* Use variable */
+  font-size: 1.1rem;
+}
+
+.createFirstTaskBtn { /* Renamed */
+  background-color: var(--color-primary); /* Use variable */
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-md); /* Use variable */
+  padding: var(--spacing-3) var(--spacing-6); /* Use variable */
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--transition-fast); /* Use variable */
+}
+
+.createFirstTaskBtn:hover {
+  background-color: var(--color-primary-dark); /* Use variable */
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .formRow {
+    flex-direction: column;
+    gap: var(--spacing-5); /* Use variable for gap */
+  }
+
+  .taskItem {
+    flex-direction: column;
+    align-items: stretch; /* Stretch content */
+  }
+
+  .taskActions {
+    align-self: flex-end; /* Keep actions right */
+    margin-top: var(--spacing-4); /* Use variable */
+  }
+
+  .headerActions {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--spacing-2); /* Use variable */
+  }
+
+  .pomodoroLink,
+  .toggleCreateBtn {
+    font-size: 0.875rem; /* Slightly smaller */
+    padding: var(--spacing-2) var(--spacing-4); /* Use variable */
+  }
+
+  .tasksHeader {
+    align-items: flex-start; /* Align h1 top */
+  }
+
+  .tasksHeader h1 {
+    font-size: 1.75rem;
+  }
+}

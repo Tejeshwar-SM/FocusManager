@@ -11,59 +11,72 @@ import TaskHistory from "./TaskHistory";
 import SessionHistory from "./SessionHistory";
 import CustomTimeModal from "./CustomTimeModal";
 import CycleCounter from "./CycleCounter";
-import "../../styles/pomodoro/PomodoroPage.css";
+import styles from "../../styles/pomodoro/PomodoroPage.module.css";
+
+// Helper function to combine class names (for conditional styling)
+const classNames = (...classes: (string | undefined | false)[]) => {
+  return classes.filter(Boolean).join(" ");
+};
+
+enum SessionType {
+  FOCUS = "focus",
+  SHORT_BREAK = "short",
+  LONG_BREAK = "long",
+}
 
 const PomodoroPage: React.FC = () => {
-  const [timer, setTimer] = useState({
-    minutes: 25,
-    seconds: 0,
-  });
+  // --- State Definitions ---
+  const [timer, setTimer] = useState({ minutes: 25, seconds: 0 });
   const [isActive, setIsActive] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [sessionType, setSessionType] = useState("focus");
+  const [sessionType, setSessionType] = useState<SessionType>(
+    SessionType.FOCUS
+  ); // Use Enum
   const [cycles, setCycles] = useState(0);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
-  const [history, setHistory] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [history, setHistory] = useState<any[]>([]); // Consider defining a Session interface here too
+  const [loadingHistory, setLoadingHistory] = useState(false); // Separate loading state for history
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // For custom time settings
+  // Custom time settings
   const [customTime, setCustomTime] = useState(25);
   const [showCustomTimeModal, setShowCustomTimeModal] = useState(false);
   const [timerCompleted, setTimerCompleted] = useState(false);
 
-  // For task input
+  // Task input
   const [currentTask, setCurrentTask] = useState("");
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
   const [availableTasks, setAvailableTasks] = useState<Task[]>([]);
   const [showTaskDropdown, setShowTaskDropdown] = useState(false);
   const [taskHistory, setTaskHistory] = useState<
     Array<{ task: string; timestamp: Date; taskId?: string }>
-  >([]);
+  >([]); // Keep this for the TaskHistory component display
 
   // Sound settings
   const [soundEnabled, setSoundEnabled] = useState(true);
 
-  // Memoize fetchSessionHistory to prevent it from changing on every render
+  // --- Callbacks ---
+
+  // Fetch session history
   const fetchSessionHistory = useCallback(async () => {
     try {
-      setLoading(true);
-      const response = await PomodoroService.getSessions();
-      setHistory(response.data.data);
+      setLoadingHistory(true);
+      const response = await PomodoroService.getSessions({ limit: 10 }); // Fetch latest sessions
+      setHistory(response.data.data || []); // Ensure it's an array
     } catch (error) {
       console.error("Error fetching sessions:", error);
+      // Optionally set an error state for history
     } finally {
-      setLoading(false);
+      setLoadingHistory(false);
     }
   }, []);
 
-  // Fetch available tasks
+  // Fetch available tasks (active tasks)
   const fetchAvailableTasks = useCallback(async () => {
     try {
       const response = await TaskService.getTasks();
-      // Filter to only show non-completed tasks
-      const activeTasks = response.data.data.filter(
+      const activeTasks = (response.data.data || []).filter(
         (task: Task) => task.status !== "completed"
       );
       setAvailableTasks(activeTasks);
@@ -72,23 +85,23 @@ const PomodoroPage: React.FC = () => {
     }
   }, []);
 
-  // Memoize handleTimerComplete to prevent unnecessary re-renders
+  // Handle timer completion (Corrected)
   const handleTimerComplete = useCallback(async () => {
-    // Play sound if enabled
     if (audioRef.current && soundEnabled) {
       try {
+        audioRef.current.volume = 0.7; // Adjust volume as needed
+        audioRef.current.currentTime = 0;
         await audioRef.current.play();
       } catch (error) {
         console.error("Error playing sound:", error);
       }
     }
 
-    // Mark timer as completed but don't auto-restart
     setIsActive(false);
     setIsPaused(false);
-    setTimerCompleted(true);
+    setTimerCompleted(true); // Mark as completed for UI state
 
-    // If there's a current task, add it to the task history
+    // Add to local task history component display (if a task was present)
     if (currentTask) {
       setTaskHistory((prev) => [
         ...prev,
@@ -98,258 +111,321 @@ const PomodoroPage: React.FC = () => {
           taskId: currentTaskId || undefined,
         },
       ]);
-
-      // If a task was selected from the dropdown, mark it as completed
-      if (currentTaskId) {
-        try {
-          await TaskService.completeTask(currentTaskId);
-          // Update available tasks
-          fetchAvailableTasks();
-        } catch (error) {
-          console.error("Error completing task:", error);
-        }
-      }
     }
 
-    if (sessionType === "focus") {
-      // Complete the session in the database
-      if (currentSessionId) {
-        try {
-          // Only send completedCycles as that's all the API expects
-          await PomodoroService.completeSession(currentSessionId, {
-            completedCycles: 1,
-          });
-          
-          // If we need to update the task name, we would need a separate API
-          // call to update the session with the task name
-          if (currentTask) {
+    // --- Backend Session Completion ---
+    if (currentSessionId) {
+      // Only complete if a session was started
+      const sessionTypeWhenCompleted = sessionType; // Capture session type at time of completion
+      try {
+        // Call backend to mark the session as completed
+        // Send completed cycles if your backend uses it, otherwise empty object {}
+        // Backend should handle setting endTime and status
+        await PomodoroService.completeSession(currentSessionId, {});
+
+        // *** REMOVED updateSession call for task name ***
+
+        setCurrentSessionId(null); // Clear session ID for the next one
+
+        // Increment cycle count ONLY for completed FOCUS sessions
+        if (sessionTypeWhenCompleted === SessionType.FOCUS) {
+          setCycles((prev) => prev + 1);
+
+          // Optionally mark the *associated* task as completed in the backend
+          // This assumes a focus session completion implies task completion
+          if (currentTaskId) {
             try {
-              await PomodoroService.updateSession(currentSessionId, {
-                task: currentTask
-              });
-            } catch (updateError) {
-              console.error("Error updating session task:", updateError);
+              await TaskService.completeTask(currentTaskId);
+              fetchAvailableTasks(); // Refresh task dropdown
+            } catch (taskError) {
+              console.error("Error auto-completing linked task:", taskError);
+              // Don't block session completion flow if task completion fails
             }
           }
-          
-          setCurrentSessionId(null);
-
-          // Update cycles count
-          setCycles((prev) => prev + 1);
-          // Refresh session history
-          fetchSessionHistory();
-        } catch (error) {
-          console.error("Error completing session:", error);
         }
+
+        // Refresh the session history list to show the updated status
+        fetchSessionHistory();
+      } catch (error) {
+        console.error("Error completing session on backend:", error);
+        // Consider how to handle this error - maybe retry? Notify user?
+        // For now, we clear the session ID anyway to prevent conflicts
+        setCurrentSessionId(null);
+      }
+    } else {
+      // If no currentSessionId, still increment cycles for focus sessions
+      // (e.g., if user manually completes without starting a backend session)
+      if (sessionType === SessionType.FOCUS) {
+        setCycles((prev) => prev + 1);
       }
     }
+
+    // Clear current task association after session completion (optional, maybe keep for breaks?)
+    // setCurrentTask("");
+    // setCurrentTaskId(null);
   }, [
-    sessionType,
     currentSessionId,
     fetchSessionHistory,
-    currentTask,
-    currentTaskId,
+    currentTask, // Needed for local task history component
+    currentTaskId, // Needed for potential task completion
     soundEnabled,
     fetchAvailableTasks,
+    sessionType, // Need sessionType to know if cycle should increment
   ]);
 
-  // Set timer based on session type
+  // --- Effects ---
+
+  // Set timer value based on session type or custom time
   useEffect(() => {
     if (!isActive) {
-      if (sessionType === "focus") {
-        // Use custom time for focus sessions
-        setTimer({ minutes: customTime, seconds: 0 });
-      } else if (sessionType === "short") {
-        setTimer({ minutes: 5, seconds: 0 });
-      } else if (sessionType === "long") {
-        setTimer({ minutes: 15, seconds: 0 });
+      // Only reset if timer is not running
+      let minutes;
+      switch (sessionType) {
+        case SessionType.FOCUS:
+          minutes = customTime;
+          break;
+        case SessionType.SHORT_BREAK:
+          minutes = 5;
+          break;
+        case SessionType.LONG_BREAK:
+          minutes = 15;
+          break;
+        default:
+          minutes = 25;
       }
+      setTimer({ minutes, seconds: 0 });
+      setTimerCompleted(false); // Reset completed flag when switching types
     }
   }, [sessionType, isActive, customTime]);
 
-  // Timer logic
+  // Core timer interval logic
   useEffect(() => {
     if (isActive && !isPaused) {
       intervalRef.current = setInterval(() => {
         setTimer((prev) => {
           if (prev.seconds === 0) {
             if (prev.minutes === 0) {
-              // This will be handled in the next useEffect that watches for timer completion
-              return prev;
+              // Timer reached zero, stop interval here, completion handled below
+              if (intervalRef.current) clearInterval(intervalRef.current);
+              return prev; // Return current state (00:00)
             } else {
-              return {
-                minutes: prev.minutes - 1,
-                seconds: 59,
-              };
+              // Decrement minute
+              return { minutes: prev.minutes - 1, seconds: 59 };
             }
           } else {
-            return {
-              ...prev,
-              seconds: prev.seconds - 1,
-            };
+            // Decrement second
+            return { ...prev, seconds: prev.seconds - 1 };
           }
         });
       }, 1000);
+    } else {
+      // Clear interval if not active or paused
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     }
-
+    // Cleanup function
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
     };
-  }, [isActive, isPaused]);
+  }, [isActive, isPaused]); // Rerun only when active/paused state changes
 
-  // Watch for timer completion
+  // Effect to watch for timer reaching 00:00
   useEffect(() => {
     if (isActive && timer.minutes === 0 && timer.seconds === 0) {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-      handleTimerComplete();
+      handleTimerComplete(); // Call completion logic
     }
-  }, [timer, isActive, handleTimerComplete]);
+  }, [timer, isActive, handleTimerComplete]); // Depend on timer state
 
-  // Fetch session history and available tasks on load
+  // Fetch initial data and setup cleanup
   useEffect(() => {
     fetchSessionHistory();
     fetchAvailableTasks();
 
-    // Clean up any active sessions if component unmounts while timer is running
+    // Cleanup: Cancel session if component unmounts while timer is active
+    const sessionToCancel = currentSessionId;
+    const activeState = isActive;
     return () => {
-      if (currentSessionId && isActive) {
-        PomodoroService.cancelSession(currentSessionId).catch((error: any) =>
+      if (sessionToCancel && activeState) {
+        PomodoroService.cancelSession(sessionToCancel).catch((error: any) =>
           console.error("Error cancelling session on unmount:", error)
         );
       }
     };
-  }, [currentSessionId, isActive, fetchSessionHistory, fetchAvailableTasks]);
+    // currentSessionId and isActive are included to capture their value at the time of effect setup for cleanup
+  }, [fetchSessionHistory, fetchAvailableTasks, currentSessionId, isActive]);
 
+  // Start Timer (Corrected: Sends taskId in one call)
   const startTimer = async () => {
+    // If paused, just resume, don't start a new session
     if (isPaused) {
       setIsPaused(false);
       return;
     }
 
-    // If timer was completed, reset it first
-    if (timerCompleted) {
-      if (sessionType === "focus") {
-        setTimer({ minutes: customTime, seconds: 0 });
-      } else if (sessionType === "short") {
-        setTimer({ minutes: 5, seconds: 0 });
-      } else {
-        setTimer({ minutes: 15, seconds: 0 });
+    // If starting after completion or reset, ensure timer value is correct
+    if (timerCompleted || !isActive) {
+      let minutes;
+      switch (sessionType) {
+        case SessionType.FOCUS:
+          minutes = customTime;
+          break;
+        case SessionType.SHORT_BREAK:
+          minutes = 5;
+          break;
+        case SessionType.LONG_BREAK:
+          minutes = 15;
+          break;
+        default:
+          minutes = 25;
       }
+      setTimer({ minutes, seconds: 0 });
       setTimerCompleted(false);
     }
 
-    if (sessionType === "focus") {
-      try {
-        // Create session with only the required parameters
-        const response = await PomodoroService.startSession({
-          duration: customTime, 
-          type: sessionType,
-        });
-        
-        setCurrentSessionId(response.data.data._id);
-        
-        // If we have a task name, update the session in a separate call
-        if (currentTask) {
-          try {
-            await PomodoroService.updateSession(response.data.data._id, {
-              task: currentTask
-            });
-          } catch (updateError) {
-            console.error("Error updating session with task:", updateError);
-          }
-        }
-      } catch (error) {
-        console.error("Error starting session:", error);
-        return; // Don't start the timer if API call fails
+    setIsActive(true); // Start frontend timer immediately
+    setIsPaused(false);
+
+    try {
+      // Prepare payload for backend
+      // Determine duration based on sessionType and customTime
+      let durationToSend;
+      switch (sessionType) {
+        case SessionType.FOCUS:
+          durationToSend = customTime;
+          break;
+        case SessionType.SHORT_BREAK:
+          durationToSend = 5;
+          break;
+        case SessionType.LONG_BREAK:
+          durationToSend = 15;
+          break;
+        default:
+          durationToSend = customTime; // Fallback to customTime or a default
       }
+
+      const payload = {
+        duration: durationToSend,
+        type: sessionType, // Send 'focus', 'short', or 'long'
+        // Only associate taskId if it's a focus session AND a task ID is selected
+        taskId: sessionType === SessionType.FOCUS ? currentTaskId : null,
+      };
+
+      // Start session on backend
+      const response = await PomodoroService.startSession(payload);
+      setCurrentSessionId(response.data.data._id);
+
+      // *** REMOVED separate updateSession call for task name ***
+    } catch (error) {
+      console.error("Error starting session:", error);
+      setIsActive(false); // Stop timer if API call failed
+      // Optionally show an error message to the user
     }
-    setIsActive(true);
   };
 
+  // Pause Timer
   const pauseTimer = () => {
     setIsPaused(true);
+    // No backend call needed for pause typically
   };
 
+  // Reset Timer (Handles cancellation)
   const resetTimer = async () => {
+    // If there's an active backend session, cancel it
     if (currentSessionId) {
       try {
         await PomodoroService.cancelSession(currentSessionId);
-        // Refresh session history to show cancelled status
-        fetchSessionHistory();
+        fetchSessionHistory(); // Refresh history to show cancelled status
       } catch (error) {
-        console.error("Error cancelling session:", error);
+        console.error("Error cancelling session on backend:", error);
+        // Proceed with frontend reset even if backend fails? Decide on behavior.
       } finally {
-        setCurrentSessionId(null);
+        setCurrentSessionId(null); // Clear ID regardless
       }
     }
 
+    // Reset frontend state
+    if (intervalRef.current) clearInterval(intervalRef.current); // Clear any running interval
     setIsActive(false);
     setIsPaused(false);
     setTimerCompleted(false);
-    // Reset timer based on current session type
-    if (sessionType === "focus") {
-      setTimer({ minutes: customTime, seconds: 0 });
-    } else if (sessionType === "short") {
-      setTimer({ minutes: 5, seconds: 0 });
-    } else if (sessionType === "long") {
-      setTimer({ minutes: 15, seconds: 0 });
+
+    // Reset timer display based on current session type
+    let minutes;
+    switch (sessionType) {
+      case SessionType.FOCUS:
+        minutes = customTime;
+        break;
+      case SessionType.SHORT_BREAK:
+        minutes = 5;
+        break;
+      case SessionType.LONG_BREAK:
+        minutes = 15;
+        break;
+      default:
+        minutes = 25;
     }
+    setTimer({ minutes, seconds: 0 });
+
+    // Optionally reset cycles? Or keep for the day? Depends on requirements.
+    // setCycles(0);
   };
 
-  // Format time for display (e.g., 5:03)
-  const formatTime = (minutes: number, seconds: number) => {
-    return `${minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
-  };
-
+  // Handle changes in the custom time input modal
   const handleCustomTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
+    // Basic validation
     if (!isNaN(value) && value >= 1 && value <= 180) {
       setCustomTime(value);
     }
   };
 
+  // Save the custom time from the modal
   const saveCustomTime = () => {
-    // If timer is not active, update the current timer
+    // Update timer display immediately *only if* timer is not currently active
     if (!isActive) {
       setTimer({ minutes: customTime, seconds: 0 });
     }
     setShowCustomTimeModal(false);
   };
 
+  // Switch between Focus, Short Break, Long Break
   const handleSwitchSessionType = (type: string) => {
+    // Prevent switching if timer is active
     if (!isActive) {
-      setSessionType(type);
-      setTimerCompleted(false);
+      setSessionType(type as SessionType);
+      // Timer value update is handled by the useEffect watching [sessionType, isActive]
+      setTimerCompleted(false); // Ensure completed state is reset
     }
   };
 
+  // Handle typing in the task input field
   const handleTaskChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCurrentTask(e.target.value);
-    setCurrentTaskId(null); // Reset task ID when typing manually
-    if (e.target.value.trim() === "") {
-      setShowTaskDropdown(false);
-    } else {
-      setShowTaskDropdown(true);
-    }
+    const value = e.target.value;
+    setCurrentTask(value);
+    setCurrentTaskId(null); // Clear selected ID if user starts typing manually
+    // Show dropdown only if input is not empty
+    setShowTaskDropdown(!!value.trim());
   };
 
+  // Handle selecting a task from the dropdown
   const handleTaskSelect = (task: Task) => {
     setCurrentTask(task.title);
     setCurrentTaskId(task._id);
-    setShowTaskDropdown(false);
+    setShowTaskDropdown(false); // Hide dropdown after selection
   };
 
+  // Toggle sound notification
   const toggleSound = () => {
-    setSoundEnabled((prev) => !prev);
+    const willBeEnabled = !soundEnabled;
+    setSoundEnabled(willBeEnabled);
 
-    // Play a test sound when enabled
-    if (!soundEnabled && audioRef.current) {
+    // Play a short test sound when enabling
+    if (willBeEnabled && audioRef.current) {
       try {
         audioRef.current.volume = 0.5; // Lower volume for test
         audioRef.current.currentTime = 0;
@@ -362,90 +438,104 @@ const PomodoroPage: React.FC = () => {
     }
   };
 
-  // Handle clicking outside the dropdown
+  // Effect to close task dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!target.closest('.task-input-container')) {
+      // Find the task input container using its CSS Module class name
+      const taskInputContainer = document.querySelector(
+        `.${styles.taskInputContainer}`
+      );
+      if (
+        taskInputContainer &&
+        !taskInputContainer.contains(event.target as Node)
+      ) {
         setShowTaskDropdown(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
   return (
-    <div className="pomodoro-page">
-      <header className="pomodoro-header">
+    <div className={styles.pomodoroPage}>
+      <header className={styles.pomodoroHeader}>
         <h1>Pomodoro Timer</h1>
-        <p>Focus on your tasks with timed work sessions</p>
+        <p>Stay focused and manage your work sessions effectively.</p>
       </header>
 
-      <div className="timer-container">
-        <SessionTypeSelector 
-          sessionType={sessionType} 
-          onSwitchType={handleSwitchSessionType} 
-          isActive={isActive} 
+      <div className={styles.timerContainer}>
+        <SessionTypeSelector
+          sessionType={sessionType}
+          onSwitchType={handleSwitchSessionType}
+          isActive={isActive}
         />
 
-        <TaskInput 
-          currentTask={currentTask}
-          onChange={handleTaskChange}
-          onSelect={handleTaskSelect}
-          availableTasks={availableTasks}
-          showDropdown={showTaskDropdown}
-          isDisabled={isActive && !isPaused}
+        {/* Render TaskInput only for focus sessions */}
+        {sessionType === SessionType.FOCUS && (
+          <TaskInput
+            // Add container class for click outside detection
+            containerClassName={styles.taskInputContainer}
+            currentTask={currentTask}
+            onChange={handleTaskChange}
+            onSelect={handleTaskSelect}
+            availableTasks={availableTasks}
+            showDropdown={showTaskDropdown}
+            // Disable input when timer is active and not paused
+            isDisabled={isActive && !isPaused}
+          />
+        )}
+
+        <TimerDisplay
+          minutes={timer.minutes}
+          seconds={timer.seconds}
+          completed={timerCompleted}
         />
 
-        <TimerDisplay 
-          minutes={timer.minutes} 
-          seconds={timer.seconds} 
-          completed={timerCompleted} 
+        <TimerSettings
+          onCustomTimeClick={() => setShowCustomTimeModal(true)}
+          onSoundToggle={toggleSound}
+          soundEnabled={soundEnabled}
+          isActive={isActive} // Pass active state to disable settings if needed
         />
 
-        <TimerSettings 
-          onCustomTimeClick={() => setShowCustomTimeModal(true)} 
-          onSoundToggle={toggleSound} 
-          soundEnabled={soundEnabled} 
-          isActive={isActive} 
-        />
-
-        <TimerControls 
-          isActive={isActive} 
-          isPaused={isPaused} 
-          timerCompleted={timerCompleted} 
-          onStart={startTimer} 
-          onPause={pauseTimer} 
-          onReset={resetTimer} 
+        <TimerControls
+          isActive={isActive}
+          isPaused={isPaused}
+          timerCompleted={timerCompleted}
+          onStart={startTimer}
+          onPause={pauseTimer}
+          onReset={resetTimer}
         />
 
         <CycleCounter cycles={cycles} />
       </div>
 
-      {taskHistory.length > 0 && (
-        <TaskHistory taskHistory={taskHistory} />
-      )}
+      {/* Conditionally render TaskHistory only if it has items */}
+      {taskHistory.length > 0 && <TaskHistory taskHistory={taskHistory} />}
 
-      <SessionHistory 
-        history={history} 
-        loading={loading} 
+      {/* Render the corrected SessionHistory component */}
+      <SessionHistory
+        history={history}
+        loading={loadingHistory} // Use separate loading state
       />
 
+      {/* Custom Time Modal */}
       {showCustomTimeModal && (
-        <CustomTimeModal 
-          customTime={customTime} 
-          onChange={handleCustomTimeChange} 
-          onSave={saveCustomTime} 
-          onClose={() => setShowCustomTimeModal(false)} 
+        <CustomTimeModal
+          customTime={customTime}
+          onChange={handleCustomTimeChange}
+          onSave={saveCustomTime}
+          onClose={() => setShowCustomTimeModal(false)}
         />
       )}
 
+      {/* Audio Element for notification sound */}
       <audio
         ref={audioRef}
-        src="/sounds/achievement-bell.wav"
+        src="/sounds/achievement-bell.wav" // Ensure this path is correct in your public folder
         preload="auto"
       ></audio>
     </div>

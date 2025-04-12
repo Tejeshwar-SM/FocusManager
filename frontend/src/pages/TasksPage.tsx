@@ -2,10 +2,16 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import TaskService from "../services/TaskService";
 import { TaskPriority, TaskStatus } from "../types/TaskTypes";
-import "../styles/Tasks.css";
+// Import CSS Module
+import styles from "../styles/Tasks.module.css"; // Rename Tasks.css to Tasks.module.css
+
+// Helper function to combine class names
+const classNames = (...classes: (string | undefined | false)[]) => {
+  return classes.filter(Boolean).join(' ');
+}
 
 const TasksPage: React.FC = () => {
-  const [tasks, setTasks] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<any[]>([]); // Consider defining a specific Task interface
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [newTask, setNewTask] = useState({
@@ -15,7 +21,7 @@ const TasksPage: React.FC = () => {
     dueDate: "",
   });
   const [isCreating, setIsCreating] = useState(false);
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState<"all" | "active" | "completed">("all"); // Type the filter state
 
   useEffect(() => {
     fetchTasks();
@@ -24,11 +30,12 @@ const TasksPage: React.FC = () => {
   const fetchTasks = async () => {
     try {
       setLoading(true);
+      setError(""); // Clear previous errors
       const response = await TaskService.getTasks();
-      setTasks(response.data.data);
-    } catch (error) {
+      setTasks(response.data.data || []); // Ensure tasks is always an array
+    } catch (error: any) {
       console.error("Error fetching tasks:", error);
-      setError("Failed to load tasks. Please try again later.");
+      setError(error.response?.data?.message || "Failed to load tasks. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -49,74 +56,103 @@ const TasksPage: React.FC = () => {
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      setError(""); // Clear previous errors
       await TaskService.createTask(newTask);
-      setNewTask({
+      setNewTask({ // Reset form
         title: "",
         description: "",
         priority: "medium" as TaskPriority,
         dueDate: "",
       });
       setIsCreating(false);
-      fetchTasks();
-    } catch (error) {
+      await fetchTasks(); // Refetch tasks after creating
+    } catch (error: any) {
       console.error("Error creating task:", error);
-      setError("Failed to create task. Please try again.");
+      setError(error.response?.data?.message || "Failed to create task. Please try again.");
     }
   };
 
   const handleCompleteTask = async (id: string) => {
     try {
+      setError(""); 
       await TaskService.completeTask(id);
-      fetchTasks();
-    } catch (error) {
+      await fetchTasks(); // Refetch tasks after updating
+    } catch (error: any) {
       console.error("Error completing task:", error);
-      setError("Failed to update task. Please try again.");
+      setError(error.response?.data?.message || "Failed to update task. Please try again.");
     }
   };
 
   const handleDeleteTask = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this task?")) {
+    // Confirm deletion with the user
+    if (window.confirm("Are you sure you want to delete this task? This action cannot be undone.")) {
       try {
+        setError("");
         await TaskService.deleteTask(id);
-        fetchTasks();
-      } catch (error) {
+        await fetchTasks(); // Refetch tasks after deleting
+      } catch (error: any) {
         console.error("Error deleting task:", error);
-        setError("Failed to delete task. Please try again.");
+        setError(error.response?.data?.message || "Failed to delete task. Please try again.");
       }
     }
   };
 
+  
   const filteredTasks = tasks.filter((task) => {
+    const statusCompleted = TaskStatus.COMPLETED || 'completed'; 
     if (filter === "all") return true;
-    if (filter === "active") return task.status !== TaskStatus.COMPLETED;
-    if (filter === "completed") return task.status === TaskStatus.COMPLETED;
+    if (filter === "active") return task.status !== statusCompleted;
+    if (filter === "completed") return task.status === statusCompleted;
     return true;
   });
 
+  // Function to render the appropriate "No Tasks" message
+  const renderNoTasksMessage = () => {
+    switch (filter) {
+      case 'completed':
+        return <p>You haven't completed any tasks yet!</p>;
+      case 'active':
+        return <p>No active tasks found. Ready for a new challenge?</p>;
+      case 'all':
+      default:
+        return (
+          <>
+            <p>No tasks found. Let's get productive!</p>
+            <button onClick={() => setIsCreating(true)} className={styles.createFirstTaskBtn}>
+              Create your first task
+            </button>
+          </>
+        );
+    }
+  };
+
   return (
-    <div className="tasks-page">
-      <header className="tasks-header">
+    // Use styles object for class names
+    <div className={styles.tasksPage}>
+      <header className={styles.tasksHeader}>
         <h1>My Tasks</h1>
-        <div className="header-actions">
-          <Link to="/pomodoro" className="pomodoro-link">
+        <div className={styles.headerActions}>
+          <Link to="/pomodoro" className={styles.pomodoroLink}>
             Go to Pomodoro Timer
           </Link>
           <button
-            className="create-task-btn"
+            className={styles.toggleCreateBtn} // Changed class name
             onClick={() => setIsCreating(!isCreating)}
           >
-            {isCreating ? "Cancel" : "Create New Task"}
+            {isCreating ? "Cancel" : "+ New Task"}
           </button>
         </div>
       </header>
 
-      {error && <div className="error-message">{error}</div>}
+      {/* Display error messages */}
+      {error && <div className={styles.errorMessage}>{error}</div>}
 
+      {/* Create Task Form */}
       {isCreating && (
-        <div className="create-task-form">
+        <div className={styles.createTaskForm}>
           <h2>Create New Task</h2>
           <form onSubmit={handleCreateTask}>
-            <div className="form-group">
+            <div className={styles.formGroup}>
               <label htmlFor="title">Title</label>
               <input
                 type="text"
@@ -125,24 +161,24 @@ const TasksPage: React.FC = () => {
                 value={newTask.title}
                 onChange={handleInputChange}
                 required
-                placeholder="Task title"
+                placeholder="e.g., Finish project proposal"
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="description">Description</label>
+            <div className={styles.formGroup}>
+              <label htmlFor="description">Description (Optional)</label>
               <textarea
                 id="description"
                 name="description"
                 value={newTask.description}
                 onChange={handleInputChange}
-                placeholder="Task description (optional)"
+                placeholder="Add details..."
                 rows={3}
               ></textarea>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
                 <label htmlFor="priority">Priority</label>
                 <select
                   id="priority"
@@ -155,21 +191,28 @@ const TasksPage: React.FC = () => {
                   <option value="high">High</option>
                 </select>
               </div>
-
-              <div className="form-group">
-                <label htmlFor="dueDate">Due Date</label>
+              <div className={styles.formGroup}>
+                <label htmlFor="dueDate">Due Date (Optional)</label>
                 <input
                   type="date"
                   id="dueDate"
                   name="dueDate"
                   value={newTask.dueDate}
                   onChange={handleInputChange}
+                  min={new Date().toISOString().split('T')[0]} // Prevent past dates
                 />
               </div>
             </div>
 
-            <div className="form-actions">
-              <button type="submit" className="submit-btn">
+            <div className={styles.formActions}>
+               <button
+                type="button" // Important: type="button" to prevent form submission
+                onClick={() => setIsCreating(false)}
+                className={classNames(styles.formButton, styles.cancelBtn)} // Added cancel button
+              >
+                Cancel
+              </button>
+              <button type="submit" className={classNames(styles.formButton, styles.submitBtn)}>
                 Create Task
               </button>
             </div>
@@ -177,93 +220,94 @@ const TasksPage: React.FC = () => {
         </div>
       )}
 
-      <div className="task-filters">
+      {/* Task Filters */}
+      <div className={styles.taskFilters}>
         <button
-          className={filter === "all" ? "active" : ""}
+          className={classNames(styles.filterButton, filter === "all" && styles.active)}
           onClick={() => setFilter("all")}
         >
-          All
+          All Tasks
         </button>
         <button
-          className={filter === "active" ? "active" : ""}
+          className={classNames(styles.filterButton, filter === "active" && styles.active)}
           onClick={() => setFilter("active")}
         >
           Active
         </button>
         <button
-          className={filter === "completed" ? "active" : ""}
+          className={classNames(styles.filterButton, filter === "completed" && styles.active)}
           onClick={() => setFilter("completed")}
         >
           Completed
         </button>
       </div>
 
+      {/* Task List or Loading/No Tasks Message */}
       {loading ? (
-        <div className="loading">Loading tasks...</div>
+        <div className={styles.loading}>Loading tasks...</div> // Use styles.loading
       ) : (
-        <div className="tasks-list">
+        <div className={styles.tasksList}>
           {filteredTasks.length > 0 ? (
             filteredTasks.map((task) => (
               <div
                 key={task._id}
-                className={`task-item ${task.status.toLowerCase()}`}
+                // Combine base class with dynamic status class
+                className={classNames(styles.taskItem, styles[task.status])} // e.g., styles.completed
               >
-                <div className="task-content">
+                <div className={styles.taskContent}>
                   <h3>{task.title}</h3>
                   {task.description && <p>{task.description}</p>}
 
-                  <div className="task-meta">
-                    <span className={`priority ${task.priority}`}>
-                      {task.priority.charAt(0).toUpperCase() +
-                        task.priority.slice(1)}
+                  <div className={styles.taskMeta}>
+                    {/* Combine base class with dynamic priority class */}
+                    <span className={classNames(styles.priority, styles[task.priority])}>
+                      {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)} Priority
                     </span>
 
                     {task.dueDate && (
-                      <span className="due-date">
+                      <span className={styles.dueDate}>
                         Due: {new Date(task.dueDate).toLocaleDateString()}
                       </span>
                     )}
                   </div>
                 </div>
 
-                <div className="task-actions">
-                  {task.status !== TaskStatus.COMPLETED && (
+                <div className={styles.taskActions}>
+                  {task.status !== (TaskStatus.COMPLETED || 'completed') && (
                     <>
+                      {/* Complete Button */}
                       <button
-                        className="complete-btn"
+                        className={classNames(styles.actionButton, styles.completeBtn)}
                         onClick={() => handleCompleteTask(task._id)}
                         title="Mark as completed"
                       >
-                        ✓
+                        ✓ {/* Checkmark icon */}
                       </button>
+                      {/* Focus Button */}
                       <Link
-                        to={`/pomodoro?task=${encodeURIComponent(
-                          task.title
-                        )}&id=${task._id}`}
-                        className="pomodoro-btn"
+                        to={`/pomodoro?task=${encodeURIComponent(task.title)}&id=${task._id}`}
+                        className={classNames(styles.actionButton, styles.pomodoroBtn)}
                         title="Focus on this task"
                       >
-                        ▶
+                        ▶ {/* Play icon */}
                       </Link>
                     </>
                   )}
-
+                  {/* Delete Button */}
                   <button
-                    className="delete-btn"
+                    className={classNames(styles.actionButton, styles.deleteBtn)}
                     onClick={() => handleDeleteTask(task._id)}
                     title="Delete task"
                   >
-                    ×
+                    ✕ {/* Cross icon */}
                   </button>
                 </div>
               </div>
             ))
           ) : (
-            <div className="no-tasks">
-              <p>No tasks found.</p>
-              <button onClick={() => setIsCreating(true)}>
-                Create your first task
-              </button>
+            // Use the specific message rendering function
+            <div className={styles.noTasks}>
+              {renderNoTasksMessage()}
             </div>
           )}
         </div>

@@ -9,6 +9,7 @@ interface TaskInputProps {
   availableTasks: Task[];
   showDropdown: boolean;
   isDisabled: boolean;
+  containerClassName?: string;
 }
 
 const TaskInput: React.FC<TaskInputProps> = ({
@@ -18,6 +19,7 @@ const TaskInput: React.FC<TaskInputProps> = ({
   availableTasks,
   showDropdown,
   isDisabled,
+  containerClassName,
 }) => {
   return (
     <div className="task-input-container">
@@ -29,6 +31,7 @@ const TaskInput: React.FC<TaskInputProps> = ({
         onFocus={() => {}}
         disabled={isDisabled}
         className="task-input"
+        
       />
       {showDropdown && availableTasks.length > 0 && (
         <div className="task-dropdown">

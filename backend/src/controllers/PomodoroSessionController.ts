@@ -1,9 +1,11 @@
+// src/controllers/pomodoroController.ts (Corrected)
 import { Request, Response } from "express";
 import mongoose from "mongoose";
 import PomodoroSession, {
   IPomodoroSession,
   SessionStatus,
-} from "../models/PomodoroSession";
+  SessionType, // Make sure SessionType enum is imported/available
+} from "../models/PomodoroSession"; // Adjust path if needed
 
 //start a new pomodoro session
 export const startSession = async (
@@ -11,21 +13,38 @@ export const startSession = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { duration } = req.body;
+    // Destructure all expected fields from body
+    const { duration, type, taskId } = req.body;
 
+    // Validate required fields
     if (!duration || duration < 1) {
-      res.status(400).json({ success: false, message: "Duration is required" });
+      res.status(400).json({ success: false, message: "Duration is required and must be at least 1" });
       return;
     }
-    //duration cannot be less than 1 minute
+    if (!type || !Object.values(SessionType).includes(type)) {
+      res.status(400).json({ success: false, message: "Valid session type ('focus', 'short', 'long') is required" });
+      return;
+    }
 
-    const session = await PomodoroSession.create({
-      user: req.user?.id,
+    // Construct session data
+    const sessionData: Partial<IPomodoroSession> = {
+      user: req.user?.id ? new mongoose.Types.ObjectId(req.user.id) : undefined,
       startTime: new Date(),
       duration,
       status: SessionStatus.IN_PROGRESS,
       completedCycles: 0,
-    });
+      type: type as SessionType,
+    };
+
+    // Add taskId only if provided and valid (optional basic check)
+    if (taskId && mongoose.Types.ObjectId.isValid(taskId)) {
+      sessionData.taskId = new mongoose.Types.ObjectId(taskId);
+    } else if (taskId) {
+      console.warn(`Invalid taskId format received: ${taskId}`); // Log invalid IDs
+    }
+
+    const session = await PomodoroSession.create(sessionData);
+
     res.status(201).json({
       success: true,
       data: session,
@@ -44,19 +63,22 @@ export const completeSession = async (
   try {
     const session = await PomodoroSession.findOne({
       _id: req.params.id,
-      user: req.user?.id,
+      user: req.user?.id ? new mongoose.Types.ObjectId(req.user.id) : undefined,
       status: SessionStatus.IN_PROGRESS,
     });
 
     if (!session) {
-      res.status(404).json({ success: false, message: "Session not found" });
+      res.status(404).json({ success: false, message: "Session not found or not in progress" });
       return;
     }
 
     session.status = SessionStatus.COMPLETED;
     session.endTime = new Date();
-    session.completedCycles =
-      req.body.completedCycles || session.completedCycles;
+    // Only update cycles if provided, otherwise keep existing (though it starts at 0 now)
+    if (req.body.completedCycles !== undefined) {
+        session.completedCycles = Number(req.body.completedCycles); // Ensure it's a number
+    }
+
 
     await session.save();
 
@@ -83,7 +105,7 @@ export const cancelSession = async (
     });
 
     if (!session) {
-      res.status(404).json({ success: false, message: "Session not found" });
+      res.status(404).json({ success: false, message: "Session not found or not in progress" });
       return;
     }
 
@@ -107,9 +129,19 @@ export const getSessions = async (
   res: Response
 ): Promise<void> => {
   try {
-    const sessions = await PomodoroSession.find({
-      user: req.user?.id,
-    }).sort({ startTime: -1 });
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
+
+    let query = PomodoroSession.find({
+      user: req.user?.id ? new mongoose.Types.ObjectId(req.user.id) : undefined,
+    })
+    .sort({ startTime: -1 })
+    .populate<{ taskId: { _id: string, title: string } }>('taskId', 'title');
+
+    if(limit) {
+        query = query.limit(limit);
+    }
+
+    const sessions = await query.exec();
 
     res.json({
       success: true,
@@ -121,37 +153,39 @@ export const getSessions = async (
   }
 };
 
-//get pomodoro statistics
+
+// Get stats (keep as is or refine if needed)
 export const getStats = async (req: Request, res: Response): Promise<void> => {
   try {
-    //get total completed sessions
-    const totalCompletedSessions = await PomodoroSession.countDocuments({
-      user: req.user?.id,
-      status: SessionStatus.COMPLETED,
-    });
-    //get total focus time in minutes
+    const { date } = req.query;
+    const targetDate = date ? new Date(date as string) : new Date();
+    targetDate.setHours(0, 0, 0, 0);
+
+    const nextDay = new Date(targetDate);
+    nextDay.setDate(targetDate.getDate() + 1);
+
+    const matchCriteria = {
+        user: new mongoose.Types.ObjectId(String(req.user?.id)),
+        status: SessionStatus.COMPLETED,
+        startTime: { $gte: targetDate, $lt: nextDay },
+        type: SessionType.FOCUS // Only count completed FOCUS sessions for stats
+    };
+
+    const totalCompletedSessions = await PomodoroSession.countDocuments(matchCriteria);
+
     const focusTimeResult = await PomodoroSession.aggregate([
-      {
-        $match: {
-          user: new mongoose.Types.ObjectId(req.user?.id as string),
-          status: SessionStatus.COMPLETED,
-        },
-      },
+      { $match: matchCriteria },
       {
         $group: {
           _id: null,
           totalDuration: { $sum: "$duration" },
-          totalCycles: { $sum: "$completedCycles" },
         },
       },
     ]);
 
     const stats = {
       totalCompletedSessions,
-      totalFocusTime:
-        focusTimeResult.length > 0 ? focusTimeResult[0].totalDuration : 0,
-      totalCycles:
-        focusTimeResult.length > 0 ? focusTimeResult[0].totalCycles : 0,
+      totalFocusTime: focusTimeResult.length > 0 ? focusTimeResult[0].totalDuration : 0,
     };
 
     res.json({
@@ -163,3 +197,7 @@ export const getStats = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+
+// **** REMOVE updateSession endpoint if it only updated task name ****
+// If updateSession is used for other fields, keep it, but it's NOT needed for task linking anymore.
+// export const updateSession = async(...) => { ... }

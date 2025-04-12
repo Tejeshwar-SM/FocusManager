@@ -1,0 +1,43 @@
+
+.pomodoroPage {
+  max-width: 700px; 
+  margin: 0 auto;
+  padding: var(--spacing-8) var(--spacing-4); 
+  font-family: inherit;
+  color: var(--color-text); 
+}
+
+.pomodoroHeader {
+  text-align: center;
+  margin-bottom: var(--spacing-8); 
+}
+
+.pomodoroHeader h1 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-2); 
+  color: var(--color-primary);
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+.pomodoroHeader p {
+  color: var(--color-text-secondary);
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.timerContainer {
+  background-color: var(--color-surface); 
+  color: var(--color-text);
+  border-radius: var(--border-radius-xl); 
+  padding: var(--spacing-8); 
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-border); 
+  margin-bottom: var(--spacing-8); 
+  position: relative;
+}
+
+.taskInputContainer {
+  position: relative;
+  margin-bottom: var(--spacing-6);
+}

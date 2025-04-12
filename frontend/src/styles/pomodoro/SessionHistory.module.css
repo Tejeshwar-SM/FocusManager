@@ -1,0 +1,138 @@
+/* SessionHistory.module.css */
+
+.sessionHistory {
+  background-color: var(--color-surface); /* Use variable */
+  color: var(--color-text); /* Use variable */
+  border-radius: var(--border-radius-xl); /* Use variable (12px ~ 0.75rem) */
+  padding: var(--spacing-6); /* Use variable (1.5rem) */
+  box-shadow: var(--shadow-md); /* Use variable */
+  border: 1px solid var(--color-border); /* Add border consistent with other components */
+  margin-top: var(--spacing-8); /* Add margin like other sections */
+}
+
+.sessionHistory h2 {
+  margin-top: 0; /* Remove default margin */
+  margin-bottom: var(--spacing-4); /* Use variable (1rem) */
+  padding-bottom: var(--spacing-3); /* Add padding */
+  font-size: 1.5rem;
+  color: var(--color-text); /* Use variable */
+  font-weight: 600; /* Add weight */
+  border-bottom: 1px solid var(--color-border); /* Use variable */
+}
+
+/* Renamed from .loading */
+.loadingMessage {
+  text-align: center;
+  padding: var(--spacing-8); /* Increased padding */
+  color: var(--color-text-secondary); /* Use variable */
+  font-style: italic;
+}
+
+.historyList {
+  list-style: none; /* Remove default bullets */
+  padding: 0;
+  margin: 0;
+  /* max-height: 300px; */ /* Consider removing fixed height or making it larger */
+  /* overflow-y: auto; */
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3); /* Use variable */
+}
+
+.historyItem {
+  display: flex; /* Use flex for better control */
+  flex-direction: column; /* Stack sections */
+  gap: var(--spacing-2); /* Space between sections */
+  padding: var(--spacing-4); /* Use variable (slightly more than 0.75rem) */
+  border-radius: var(--border-radius-md); /* Add radius */
+  background-color: var(--color-surface-hover); /* Use slightly different bg */
+  border: 1px solid var(--color-border); /* Use variable */
+  /* Removed bottom border, using gap now */
+}
+
+/* Replaced .history-info */
+.itemHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+}
+
+/* Replaced .history-date */
+.dateTime {
+  font-size: 0.85rem;
+  color: var(--color-text-tertiary); /* Use variable */
+  font-weight: 500;
+}
+
+/* Added based on TSX */
+.sessionType {
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--color-text-secondary); /* Use variable */
+}
+
+/* Added based on TSX
+.itemBody {
+  /* Styles if needed for the task name wrapper */
+/* } */
+
+/* Replaced .history-task */
+.taskName {
+  font-size: 0.95rem;
+  font-weight: 600; /* Made bolder */
+  color: var(--color-text); /* Use variable */
+  word-break: break-word;
+}
+
+/* Replaced .history-details */
+.itemFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-3); /* Increased gap */
+}
+
+/* Replaced .history-duration */
+.duration {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary); /* Use variable */
+}
+
+/* Replaced .history-status */
+.status {
+  padding: var(--spacing-1) var(--spacing-2); /* Use variables */
+  border-radius: var(--border-radius-full); /* Use variable */
+  font-size: 0.8rem; /* Slightly smaller */
+  font-weight: 600;
+  text-transform: capitalize; /* Match TSX helper */
+}
+
+/* Status variants using variables */
+.status.completed {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+}
+.status.cancelled {
+  background-color: var(--color-danger-light);
+  color: var(--color-danger);
+}
+/* Renamed from .inprogress to match TSX */
+.status.inProgress {
+  background-color: var(--color-info-light);
+  color: var(--color-info);
+}
+
+/* Renamed from .no-history */
+.noHistoryMessage {
+  text-align: center;
+  padding: var(--spacing-8); /* Increased padding */
+  color: var(--color-text-secondary); /* Use variable */
+  font-style: italic;
+}
+
+/* REMOVED ALL [data-theme="dark"] rules */
+
