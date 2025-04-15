@@ -7,6 +7,7 @@ import {
   deleteTask,
   completeTask,
   getTaskStats,
+  updateTaskTime, // Add new controller
 } from "../controllers/TaskController";
 import { protect } from "../middleware/Authentication";
 
@@ -21,10 +22,13 @@ router.route("/").get(getTasks).post(createTask);
 // IMPORTANT: Put specific routes BEFORE parametric routes
 router.get("/stats", getTaskStats); // Stats endpoint COMES FIRST
 
-//get, update, and delete a specific task
-router.route("/:id").get(getTask).put(updateTask).delete(deleteTask);
+// Add new route for updating task time
+router.route("/:id/update-time").put(updateTaskTime);
 
 //complete a task
 router.route("/:id/complete").put(completeTask);
+
+//get, update, and delete a specific task
+router.route("/:id").get(getTask).put(updateTask).delete(deleteTask);
 
 export default router;

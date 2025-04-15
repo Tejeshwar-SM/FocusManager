@@ -20,6 +20,8 @@ export interface ITask extends Document {
   priority: TaskPriority;
   status: TaskStatus;
   dueDate?: Date;
+  estimatedTime?: number; // Added: estimated time in minutes
+  remainingTime?: number; // Added: remaining time in minutes
   createdAt: Date;
   updatedAt: Date;
 }
@@ -52,6 +54,14 @@ const TaskSchema = new Schema<ITask>(
     },
     dueDate: {
       type: Date,
+    },
+    estimatedTime: {
+      type: Number,
+      min: 0,
+    },
+    remainingTime: {
+      type: Number,
+      min: 0,
     },
   },
   { timestamps: true }

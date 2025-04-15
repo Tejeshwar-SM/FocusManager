@@ -1,0 +1,109 @@
+.loaderContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: var(--spacing-12) 0;
+}
+
+/* Overlay mode for absolute positioning */
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(var(--color-background-rgb, 255, 255, 255), 0.7);
+  backdrop-filter: blur(2px);
+  z-index: 100;
+}
+
+/* Size variants */
+.small .spinner {
+  width: 36px;
+  height: 36px;
+}
+
+.medium .spinner {
+  width: 60px;
+  height: 60px;
+}
+
+.large .spinner {
+  width: 80px;
+  height: 80px;
+}
+
+.spinner {
+  display: inline-block;
+  position: relative;
+}
+
+/* Modern circular SVG loader with animation */
+.circularLoader {
+  animation: rotate 2s linear infinite;
+  width: 100%;
+  height: 100%;
+}
+
+.circularLoaderPath {
+  stroke: var(--color-primary);
+  stroke-linecap: round;
+  animation: dash 1.5s ease-in-out infinite;
+}
+
+.spinnerDark .circularLoaderPath {
+  stroke: var(--color-primary-light, #6366f1);
+}
+
+.loadingText {
+  margin-top: var(--spacing-4);
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dash {
+  0% {
+    stroke-dasharray: 1, 150;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -35;
+  }
+  100% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -124;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Accessibility - hiding loader text visually but keeping it for screen readers */
+.loadingText {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

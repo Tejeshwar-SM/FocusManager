@@ -158,39 +158,53 @@ export const getSessions = async (
 export const getStats = async (req: Request, res: Response): Promise<void> => {
   try {
     const { date } = req.query;
+    console.log("Stats requested with date param:", date);
+    
+    // Get today's date (midnight)
     const targetDate = date ? new Date(date as string) : new Date();
+    
+    // Reset time to start of day (midnight)
     targetDate.setHours(0, 0, 0, 0);
-
+    
+    // Create date for end of day (next day midnight)
     const nextDay = new Date(targetDate);
     nextDay.setDate(targetDate.getDate() + 1);
+    
+    console.log("Filtering sessions between:", targetDate, "and", nextDay);
 
+    // Build match criteria to get COMPLETED FOCUS sessions for this user on the target date
     const matchCriteria = {
-        user: new mongoose.Types.ObjectId(String(req.user?.id)),
-        status: SessionStatus.COMPLETED,
-        startTime: { $gte: targetDate, $lt: nextDay },
-        type: SessionType.FOCUS // Only count completed FOCUS sessions for stats
+      user: new mongoose.Types.ObjectId(String(req.user?.id)),
+      status: SessionStatus.COMPLETED,
+      type: SessionType.FOCUS,
+      startTime: { $gte: targetDate, $lt: nextDay }
     };
 
+    // Get count of completed sessions
     const totalCompletedSessions = await PomodoroSession.countDocuments(matchCriteria);
 
+    // Calculate total focus time using aggregation
     const focusTimeResult = await PomodoroSession.aggregate([
       { $match: matchCriteria },
-      {
-        $group: {
+      { $group: {
           _id: null,
-          totalDuration: { $sum: "$duration" },
-        },
-      },
+          totalDuration: { $sum: "$duration" }
+        }
+      }
     ]);
 
+    // Format the response data
     const stats = {
       totalCompletedSessions,
       totalFocusTime: focusTimeResult.length > 0 ? focusTimeResult[0].totalDuration : 0,
+      date: targetDate.toISOString().split('T')[0] // Return the date we used for reference
     };
+
+    console.log("Returning stats:", stats);
 
     res.json({
       success: true,
-      data: stats,
+      data: stats
     });
   } catch (error) {
     console.error("Couldn't get stats", error);

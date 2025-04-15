@@ -18,6 +18,8 @@ export interface Task {
   priority: TaskPriority;
   status: TaskStatus;
   dueDate?: string;
+  estimatedTime?: number; // Added: estimated time in minutes
+  remainingTime?: number; // Added: remaining time in minutes
   createdAt: string;
   updatedAt: string;
 }

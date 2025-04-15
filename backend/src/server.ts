@@ -7,6 +7,7 @@ import connectDB from "./config/db";
 import AuthRoutes from "./routes/AuthRoutes";
 import TaskRoutes from "./routes/TaskRoutes";
 import PomodoroRoutes from "./routes/PomodoroRoutes";
+import CalendarRoutes from "./routes/CalendarRoutes";
 // import { ppid } from "process";
 dotenv.config();
 
@@ -46,6 +47,8 @@ app.get("/api", (req: Request, res: Response) => {
 app.use("/api/auth", AuthRoutes);
 app.use("/api/tasks", TaskRoutes);
 app.use("/api/pomodoro", PomodoroRoutes);
+
+app.use("/api/calendar", CalendarRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

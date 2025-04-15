@@ -11,6 +11,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import PomodoroPage from "./components/pomodoro/PomodoroPage";
 import TasksPage from "./pages/TasksPage";
+import CalendarPage from "./pages/CalendarPage";
 
 import ProtectedRoute from "./components/ProtectRoutes";
 import Navbar from "./components/Navbar";
@@ -54,6 +55,15 @@ const AppContent: React.FC = () => {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/calendar"
+            element={
+              <ProtectedRoute>
+                <CalendarPage />
+              </ProtectedRoute>
+            }
+          />
+
 
           {/* Redirect any unknown routes to home */}
           <Route path="*" element={<Navigate to="/" replace />} />

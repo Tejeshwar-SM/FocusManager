@@ -8,6 +8,15 @@
   --color-primary-dark: #4338ca;
   --color-secondary: #0f8dc7;
 
+  /* rgb versions used for opacity manipulations */
+  --color-primary-rgb: 79, 70, 229;
+  --color-danger-rgb: 239, 68, 68;
+  --color-warning-rgb: 245, 158, 11;
+  --color-success-rgb: 16, 185, 129;
+  --color-info-rgb: 59, 130, 246;
+  --color-background-rgb: 248, 250, 252;
+  --color-surface-rgb: 255, 255, 255;
+
   /* UI backgrounds */
   --color-background: #f8fafc;
   --color-surface: #ffffff;

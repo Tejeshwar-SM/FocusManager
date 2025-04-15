@@ -419,3 +419,49 @@
     font-size: 1.75rem;
   }
 }
+
+
+/* Edit mode styling - add at the end of your existing CSS file */
+
+/* Edit form container */
+.editTaskForm {
+  background-color: var(--color-surface);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-6);
+  margin-bottom: var(--spacing-8);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border);
+  /* This uses the theme variables so it works in both light/dark mode */
+}
+
+.editTaskForm h2 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-5);
+  font-size: 1.5rem;
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+/* Visual indicator for the task being edited */
+.editing {
+  border-left: 3px solid var(--color-primary) !important;
+  background-color: var(--color-surface-hover) !important;
+}
+
+/* Edit button styling */
+.editBtn {
+  color: var(--color-info);
+}
+
+.editBtn:hover {
+  background-color: var(--color-info-light);
+  color: var(--color-info);
+}
+
+/* Help text under form fields */
+.fieldHelp {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--color-text-tertiary);
+  margin-top: var(--spacing-1);
+}

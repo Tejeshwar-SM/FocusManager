@@ -10,15 +10,19 @@ import { protect } from "../middleware/Authentication";
 
 const router = express.Router();
 
-//all routes are protected= require authentication
+// All routes are protected = require authentication
 router.use(protect);
 
-//start a pomodoro session and get all sessions
+// Start a pomodoro session and get all sessions
 router.route("/").post(startSession).get(getSessions);
 
+// Get stats
 router.get("/stats", getStats);
 
-//complete or cancel a session
+// Add dedicated route for completing a session (to match frontend expectation)
+router.route("/:id/complete").put(completeSession);
+
+// Original route: update or cancel a session
 router.route("/:id").put(completeSession).delete(cancelSession);
 
 export default router;

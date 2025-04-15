@@ -1,0 +1,369 @@
+.modalBackdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: backdropFadeIn 0.2s ease forwards;
+  padding: var(--spacing-4);
+}
+
+@keyframes backdropFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.eventModal {
+  background: var(--color-surface);
+  border-radius: var(--border-radius-xl);
+  width: 90%;
+  max-width: 550px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  animation: modalSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  position: relative;
+  border: 1px solid var(--color-border);
+}
+
+@keyframes modalSlideIn {
+  from { opacity: 0; transform: translateY(-30px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-5) var(--spacing-6);
+  border-bottom: 1px solid var(--color-border);
+  position: relative;
+}
+
+.modalHeader::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  border-top-left-radius: var(--border-radius-xl);
+  border-top-right-radius: var(--border-radius-xl);
+}
+
+.modalHeader h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 0.8;
+  padding: var(--spacing-1) var(--spacing-2);
+  cursor: pointer;
+  color: var(--color-text-tertiary);
+  border-radius: var(--border-radius-md);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeButton:hover {
+  color: var(--color-text);
+  background-color: var(--color-surface-hover);
+}
+
+.closeButton:active {
+  transform: scale(0.95);
+}
+
+.modalError {
+  background-color: var(--color-danger-light);
+  color: var(--color-danger);
+  padding: var(--spacing-4) var(--spacing-6);
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border-bottom: 1px solid rgba(var(--color-danger-rgb), 0.2);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.modalError::before {
+  content: '⚠️';
+  font-size: 1.2rem;
+}
+
+.eventModal form {
+  padding: var(--spacing-6);
+}
+
+.formGroup {
+  margin-bottom: var(--spacing-5);
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: var(--spacing-2);
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.formGroup input[type="text"],
+.formGroup input[type="datetime-local"],
+.formGroup select,
+.formGroup textarea {
+  width: 100%;
+  padding: var(--spacing-3) var(--spacing-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  font-size: 1rem;
+  color: var(--color-text);
+  background-color: var(--color-input-background);
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.formGroup input:focus,
+.formGroup select:focus,
+.formGroup textarea:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.15);
+}
+
+.formGroup input::placeholder,
+.formGroup textarea::placeholder {
+  color: var(--color-text-tertiary);
+  opacity: 0.7;
+}
+
+.formSelect {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23555' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: calc(100% - var(--spacing-3)) center;
+  padding-right: var(--spacing-8) !important;
+  cursor: pointer;
+}
+
+.formRow {
+  display: flex;
+  gap: var(--spacing-5);
+}
+
+.formRow .formGroup {
+  flex: 1;
+}
+
+.formGroup.checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-5);
+}
+
+.formGroup.checkbox label {
+  margin: 0;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--color-text);
+  font-size: 0.95rem;
+  user-select: none;
+}
+
+.formGroup.checkbox input {
+  margin: 0;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-8);
+  padding-top: var(--spacing-5);
+  border-top: 1px solid var(--color-border);
+}
+
+.btn {
+  padding: var(--spacing-3) var(--spacing-5);
+  font-size: 0.95rem;
+  font-weight: 500;
+  border-radius: var(--border-radius-lg);
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100px;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.primaryBtn {
+  background-color: var(--color-primary);
+  color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.primaryBtn:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.secondaryBtn {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.secondaryBtn:hover {
+  background-color: var(--color-surface-pressed);
+}
+
+.btn:disabled {
+  background-color: var(--color-text-tertiary);
+  color: var(--color-surface);
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+  opacity: 0.7;
+}
+
+/* Dark theme */
+.darkTheme .eventModal {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+}
+
+.darkTheme .modalHeader {
+  border-bottom-color: var(--color-border);
+}
+
+.darkTheme .closeButton {
+  color: var(--color-text-tertiary);
+}
+
+.darkTheme .closeButton:hover {
+  color: var(--color-text);
+  background-color: var(--color-surface-hover);
+}
+
+.darkTheme .formSelect {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23bdbdbd' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+}
+
+.darkTheme .btn.primaryBtn {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Add RGB color variables to App.css */
+:root {
+  --color-primary-rgb: 79, 70, 229;
+  --color-danger-rgb: 239, 68, 68;
+}
+
+@media (max-width: 768px) {
+  .modalBackdrop {
+    padding: var(--spacing-2);
+  }
+  
+  .eventModal {
+    width: 100%;
+    max-height: 90vh;
+  }
+  
+  .formRow {
+    flex-direction: column;
+    gap: var(--spacing-4);
+  }
+  
+  .modalHeader {
+    padding: var(--spacing-4) var(--spacing-5);
+  }
+  
+  .eventModal form {
+    padding: var(--spacing-5);
+  }
+  
+  .formActions {
+    flex-direction: column-reverse;
+    gap: var(--spacing-3);
+  }
+  
+  .btn {
+    width: 100%;
+    padding: var(--spacing-3);
+  }
+}
+
+.dangerBtn {
+  background-color: var(--color-danger);
+  color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-right: auto; /* Push to the left */
+}
+
+.dangerBtn:hover {
+  background-color: var(--color-danger-dark);
+}
+
+.dangerBtn:focus {
+  box-shadow: 0 0 0 3px rgba(var(--color-danger-rgb), 0.4);
+}
+
+.deleteConfirmation {
+  padding: var(--spacing-6);
+  text-align: center;
+}
+
+.deleteWarning {
+  color: var(--color-danger);
+  font-weight: 500;
+  margin: var(--spacing-4) 0;
+}
+
+.deleteActions {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-4);
+  margin-top: var(--spacing-6);
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-8);
+  padding-top: var(--spacing-5);
+  border-top: 1px solid var(--color-border);
+}

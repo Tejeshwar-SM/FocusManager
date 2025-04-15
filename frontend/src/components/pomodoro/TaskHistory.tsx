@@ -8,7 +8,7 @@ interface TaskHistoryProps {
 const TaskHistory: React.FC<TaskHistoryProps> = ({ taskHistory }) => {
   return (
     <div className="task-history">
-      <h3>Completed Tasks</h3>
+      <h3>Completed Pomodoro</h3>
       <ul>
         {taskHistory.map((item, index) => (
           <li key={index}>
