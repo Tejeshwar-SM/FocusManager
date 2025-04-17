@@ -50,3 +50,38 @@ export interface User {
   name: string;
   email: string;
 }
+
+export interface LeaderboardEntry {
+  _id: string;
+  user: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  totalFocusTime: number;
+  completedSessions: number;
+  completedTasks: number;
+  weeklyScore: number;
+  monthlyScore: number;
+  rank: number;
+  lastUpdated: string;
+}
+
+export interface LeaderboardData {
+  allTime: LeaderboardEntry[];
+  weekly: LeaderboardEntry[];
+  monthly: LeaderboardEntry[];
+}
+
+export interface JournalEntry {
+  _id: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface JournalEntryForm {
+  title: string;
+  content: string;
+}

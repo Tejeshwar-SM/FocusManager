@@ -10,7 +10,7 @@ const Footer: React.FC = () => {
     <footer className={`footer ${theme === 'dark' ? 'footer-dark' : ''}`}>
       <div className="footer-container">
         <div className="footer-section">
-          <h3>FocusManager</h3>
+          <h3>FocusBuddy</h3>
           <p>Your productivity assistant to help you stay focused and accomplish more.</p>
         </div>
         

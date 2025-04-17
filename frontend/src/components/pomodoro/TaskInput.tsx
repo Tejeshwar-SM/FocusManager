@@ -1,5 +1,5 @@
 import React from "react";
-import { Task } from "../../types/TaskTypes";
+import { Task } from "../../types/types";
 import "../../styles/pomodoro/TaskInput.css";
 
 interface TaskInputProps {
@@ -31,7 +31,6 @@ const TaskInput: React.FC<TaskInputProps> = ({
         onFocus={() => {}}
         disabled={isDisabled}
         className="task-input"
-        
       />
       {showDropdown && availableTasks.length > 0 && (
         <div className="task-dropdown">

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import PomodoroService from "../../services/PomodoroService";
 import TaskService from "../../services/TaskService";
-import { Task } from "../../types/TaskTypes";
+import { Task } from "../../types/types";
 import SessionTypeSelector from "./SessionTypeSelector";
 import TimerDisplay from "./TimerDisplay";
 import TimerControls from "./TimerControls";

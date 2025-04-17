@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import PomodoroService from "../services/PomodoroService";
 import TaskService from "../services/TaskService";
-import { Task } from "../types/TaskTypes";
+import { Task } from "../types/types";
 
 const usePomodoro = () => {
   const [timer, setTimer] = useState({

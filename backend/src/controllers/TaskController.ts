@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import Task, { ITask, TaskStatus } from "../models/Task";
+import { updateLeaderboardForUser } from "./LeaderboardController";
 
 //get all tasks for a user
 export const getTasks = async (req: Request, res: Response): Promise<void> => {
@@ -286,6 +287,10 @@ export const completeTask = async (
     }
     task.status = TaskStatus.COMPLETED;
     await task.save();
+    // Update the leaderboard for the user
+    if (req.user?.id) {
+      await updateLeaderboardForUser(req.user.id);
+    }
     res.json({ success: true, data: task });
   } catch (error) {
     console.error("Complete task error", error);

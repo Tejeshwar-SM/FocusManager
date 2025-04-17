@@ -1,4 +1,5 @@
 import axios from 'axios';
+import socketService from './SocketService';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
@@ -47,8 +48,9 @@ api.interceptors.response.use(
         // Retry the original request
         return api(originalRequest);
       } catch (refreshError) {
-        // If refresh fails, redirect to login
+        // If refresh fails, redirect to login and disconnect socket
         localStorage.removeItem('accessToken');
+        socketService.disconnect();
         window.location.href = '/login';
         return Promise.reject(refreshError);
       }

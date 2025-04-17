@@ -12,7 +12,8 @@ import Dashboard from "./pages/Dashboard";
 import PomodoroPage from "./components/pomodoro/PomodoroPage";
 import TasksPage from "./pages/TasksPage";
 import CalendarPage from "./pages/CalendarPage";
-
+import LeaderboardPage from "./pages/LeaderboardPage";
+import JournalPage from "./pages/JournalPage";
 import ProtectedRoute from "./components/ProtectRoutes";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -60,6 +61,22 @@ const AppContent: React.FC = () => {
             element={
               <ProtectedRoute>
                 <CalendarPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leaderboard"
+            element={
+              <ProtectedRoute>
+                <LeaderboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/journal"
+            element={
+              <ProtectedRoute>
+                <JournalPage />
               </ProtectedRoute>
             }
           />

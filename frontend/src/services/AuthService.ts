@@ -1,4 +1,5 @@
 import axios from "axios";
+import socketService from "./SocketService";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api"; // Use port 5000
 
@@ -52,6 +53,8 @@ api.interceptors.response.use(
       } catch (refreshError) {
         //redirect to login page
         localStorage.removeItem("accessToken");
+        // Disconnect socket on token refresh failure
+        socketService.disconnect();
         window.location.href = "/login";
         return Promise.reject(refreshError);
       }
@@ -73,6 +76,8 @@ const AuthService = {
 
     if(response.data.success) {
         localStorage.setItem("accessToken", response.data.data.accessToken);
+        // Connect socket after successful registration
+        socketService.connect();
     }
     return response.data;
   },
@@ -86,6 +91,8 @@ const AuthService = {
 
     if(response.data.success) {
         localStorage.setItem("accessToken", response.data.data.accessToken);
+        // Connect socket after successful login
+        socketService.connect();
     }
     return response.data;
   },
@@ -102,8 +109,17 @@ const AuthService = {
 
   //logout user
   logout: async ()=> {
-    localStorage.removeItem("accessToken");
-    return await api.post("/auth/logout");
+    try {
+      const response = await api.post("/auth/logout");
+      localStorage.removeItem("accessToken");
+      // Disconnect socket on logout
+      socketService.disconnect();
+      return response.data;
+    } catch (error) {
+      localStorage.removeItem("accessToken");
+      socketService.disconnect();
+      throw error;
+    }
   }
 };
 

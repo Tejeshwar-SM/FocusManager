@@ -6,6 +6,7 @@ import PomodoroSession, {
   SessionStatus,
   SessionType, // Make sure SessionType enum is imported/available
 } from "../models/PomodoroSession"; // Adjust path if needed
+import { updateLeaderboardForUser } from "./LeaderboardController";
 
 //start a new pomodoro session
 export const startSession = async (
@@ -81,7 +82,9 @@ export const completeSession = async (
 
 
     await session.save();
-
+    if (req.user?.id) {
+      await updateLeaderboardForUser(req.user.id);
+    }
     res.json({
       success: true,
       data: session,

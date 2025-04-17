@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import TaskService from "../services/TaskService";
-import { TaskPriority, TaskStatus, Task } from "../types/TaskTypes";
+import { TaskPriority, TaskStatus, Task } from "../types/types";
 import styles from "../styles/Tasks.module.css";
 
 // Helper function to combine class names

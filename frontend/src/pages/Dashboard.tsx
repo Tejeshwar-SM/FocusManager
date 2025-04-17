@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import TaskService from "../services/TaskService";
 import PomodoroService from "../services/PomodoroService";
 import styles from "../styles/Dashboard.module.css";
-import { Task } from "../types/TaskTypes";
+import { Task } from "../types/types";
 
 // Define an interface for the stats state for better type safety
 interface DashboardStats {
@@ -39,10 +39,10 @@ const Dashboard: React.FC = () => {
         // Get today's date in YYYY-MM-DD format explicitly to avoid timezone issues
         const today = new Date();
         const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
+        const month = String(today.getMonth() + 1).padStart(2, "0");
+        const day = String(today.getDate()).padStart(2, "0");
         const todayString = `${year}-${month}-${day}`;
-        
+
         console.log("Dashboard: Using date for queries:", todayString);
 
         // Fetch all necessary data concurrently
@@ -55,12 +55,15 @@ const Dashboard: React.FC = () => {
 
         // Log responses for debugging
         console.log("Dashboard: Task Stats Response:", taskStatsResponse?.data);
-        console.log("Dashboard: Pomodoro Stats Response:", pomodoroStatsResponse?.data);
+        console.log(
+          "Dashboard: Pomodoro Stats Response:",
+          pomodoroStatsResponse?.data
+        );
 
         // Save debug info for troubleshooting
         setDebugInfo({
           date: todayString,
-          pomodoroResponse: pomodoroStatsResponse?.data
+          pomodoroResponse: pomodoroStatsResponse?.data,
         });
 
         // Process tasks
@@ -76,7 +79,8 @@ const Dashboard: React.FC = () => {
         const pomodoroStatsData = pomodoroStatsResponse?.data?.data;
 
         // Make sure we're accessing the correct properties based on the backend response
-        const totalCompletedSessions = pomodoroStatsData?.totalCompletedSessions ?? 0;
+        const totalCompletedSessions =
+          pomodoroStatsData?.totalCompletedSessions ?? 0;
         const totalFocusTime = pomodoroStatsData?.totalFocusTime ?? 0;
 
         console.log("Dashboard: Extracted Pomodoro Stats:", {
@@ -93,21 +97,21 @@ const Dashboard: React.FC = () => {
         });
       } catch (err: any) {
         console.error("Dashboard: Error fetching dashboard data:", err);
-        
+
         // Capture more detailed error information
         const errorDetails = {
           message: err.message,
           response: err.response?.data,
           status: err.response?.status,
         };
-        
+
         console.error("Error details:", errorDetails);
-        
+
         const errorMessage =
           err.response?.data?.message ||
           err.message ||
           "An unexpected error occurred while loading dashboard data.";
-          
+
         setError(errorMessage);
 
         // Reset stats to avoid stale data

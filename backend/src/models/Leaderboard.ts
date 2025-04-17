@@ -1,39 +1,57 @@
-import mongoose, {Document, Schema} from "mongoose";
+import mongoose, { Document, Schema } from "mongoose";
 
-//leaderboard interface
-export interface ILeaderBoard extends Document {
-    user: mongoose.Types.ObjectId;
-    rank: number;
-    completedPomodoroSessions: number;
-    totalTasksCompleted: number;
-    updatedAt: Date;
+export interface ILeaderboard extends Document {
+  user: mongoose.Types.ObjectId;
+  totalFocusTime: number; // in minutes
+  completedSessions: number;
+  completedTasks: number;
+  weeklyScore: number;
+  monthlyScore: number;
+  lastUpdated: Date;
 }
 
-//leaderboard schema
-const LeaderboardSchema = new Schema<ILeaderBoard>(
-    {
-        user:{
-            type: Schema.Types.ObjectId,
-            ref: "User",
-            required: true,
-        },
-        rank:{
-            type: Number,
-            required: true,
-            default: 0,
-        },
-        completedPomodoroSessions:{
-            type: Number,
-            default: 0,
-        },
-        totalTasksCompleted:{
-            type: Number,
-            default: 0,
-        },
+const LeaderboardSchema = new Schema(
+  {
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      unique: true,
     },
-    {timestamps: true}
+    totalFocusTime: {
+      type: Number,
+      default: 0,
+    },
+    completedSessions: {
+      type: Number,
+      default: 0,
+    },
+    completedTasks: {
+      type: Number,
+      default: 0,
+    },
+    weeklyScore: {
+      type: Number,
+      default: 0,
+    },
+    monthlyScore: {
+      type: Number,
+      default: 0,
+    },
+    lastUpdated: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  {
+    timestamps: true,
+  }
 );
 
-LeaderboardSchema.index({ completedPomodoroSessions: -1,totalTasksCompleted:-1 });
+// Create indexes for better query performance
+LeaderboardSchema.index({ totalFocusTime: -1 });
+LeaderboardSchema.index({ completedSessions: -1 });
+LeaderboardSchema.index({ weeklyScore: -1 });
+LeaderboardSchema.index({ monthlyScore: -1 });
 
-export default mongoose.model<ILeaderBoard>("LeaderBoard", LeaderboardSchema);
+export default mongoose.model<ILeaderboard>("Leaderboard", LeaderboardSchema);
