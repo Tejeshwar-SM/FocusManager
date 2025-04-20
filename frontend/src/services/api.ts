@@ -27,8 +27,13 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
+    // Don't retry if it's already a retry or refresh endpoint
+    if (originalRequest._retry || originalRequest.url === '/auth/refresh') {
+      return Promise.reject(error);
+    }
+    
     // If error is 401 and not already retrying
-    if (error.response?.status === 401 && !originalRequest._retry && error.response?.data?.expired) {
+    if (error.response?.status === 401) {
       originalRequest._retry = true;
       
       try {
@@ -39,19 +44,29 @@ api.interceptors.response.use(
           { withCredentials: true }
         );
         
-        // Store the new token
-        localStorage.setItem('accessToken', data.data.accessToken);
-        
-        // Update the original request with new token
-        originalRequest.headers['Authorization'] = `Bearer ${data.data.accessToken}`;
-        
-        // Retry the original request
-        return api(originalRequest);
+        if (data.success && data.data.accessToken) {
+          // Store the new token
+          localStorage.setItem('accessToken', data.data.accessToken);
+          
+          // Update the original request with new token
+          originalRequest.headers['Authorization'] = `Bearer ${data.data.accessToken}`;
+          
+          // Retry the original request
+          return api(originalRequest);
+        } else {
+          throw new Error('Failed to refresh token');
+        }
       } catch (refreshError) {
         // If refresh fails, redirect to login and disconnect socket
+        console.error('Failed to refresh token:', refreshError);
         localStorage.removeItem('accessToken');
+        localStorage.removeItem('userData');
         socketService.disconnect();
-        window.location.href = '/login';
+        
+        // Only redirect if we're in a browser context
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       }
     }

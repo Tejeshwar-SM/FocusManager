@@ -40,36 +40,58 @@ export const protect = async (
     if (!token) {
       res
         .status(401)
-        .json({ success: false, message: "Not authorized, no token" });
+        .json({ 
+          success: false, 
+          message: "Not authorized, no token",
+          expired: true
+        });
       return;
     }
-    // console.log("recieved token:::", token);
+
     try {
-
-      // console.log("");
-      // console.log("ACCESS SECRET", process.env.JWT_ACCESS_SECRET);
-
       // Verify token
       const decoded = jwt.verify(
         token,
         process.env.JWT_ACCESS_SECRET as string
       ) as JwtPayload;
-      console.log("decoded token", decoded);
+      
       // Check if user exists
       const user = await User.findById(decoded.id).select("-password");
       if (!user) {
-        res.status(401).json({ success: false, message: "User not found" });
+        res.status(401).json({ 
+          success: false, 
+          message: "User not found",
+          expired: true 
+        });
         return;
       }
 
       // Add user to request
       req.user = { id: decoded.id };
       next();
-    } catch (error) {
-      console.error(error);
-      res
-        .status(401)
-        .json({ success: false, message: "Not authorized, token failed" });
+    } catch (error: any) {
+      console.error("Token verification error:", error.message);
+      
+      // Send clearer error message based on error type
+      if (error.name === "TokenExpiredError") {
+        res.status(401).json({ 
+          success: false, 
+          message: "Token expired, please login again", 
+          expired: true 
+        });
+      } else if (error.name === "JsonWebTokenError") {
+        res.status(401).json({ 
+          success: false, 
+          message: "Invalid token format", 
+          expired: true 
+        });
+      } else {
+        res.status(401).json({ 
+          success: false, 
+          message: "Not authorized, token verification failed", 
+          expired: true 
+        });
+      }
       return;
     }
   } catch (error) {

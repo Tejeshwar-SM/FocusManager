@@ -5,7 +5,6 @@ import {
   generateRefreshToken,
   verifyRefreshToken,
 } from "../utils/tokenUtils";
-// import { accessSync } from "fs";
 
 //register a new user
 export const register = async (req: Request, res: Response): Promise<void> => {
@@ -15,7 +14,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     //check if user already exists
     const userExists = await User.findOne({ email });
     if (userExists) {
-      res.status(400).json({ message: "User already exists" });
+      res.status(400).json({ success: false, message: "User already exists" });
       return;
     }
     //create a new user
@@ -30,7 +29,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      path: "/",
     });
     //save refresh token in database
     user.refreshToken = refreshToken;
@@ -45,13 +45,9 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         accessToken,
       },
     });
-    console.log("Generated Access TOken", accessToken);
-    console.log("Generated Refresh Token", refreshToken);
-    console.log("JWT Secret", process.env.JWT_ACCESS_SECRET);
-    console.log("JWT Refresh Secret", process.env.JWT_REFRESH_SECRET);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error("Register error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -64,7 +60,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       | (IUser & { _id: any })
       | null;
     if (!user) {
-      res.status(400).json({ message: "Invalid credentials" });
+      res.status(400).json({ success: false, message: "Invalid credentials" });
       return;
     }
 
@@ -85,7 +81,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         httpOnly: true,
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         secure: process.env.NODE_ENV === "production",
-        sameSite: "none",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        path: "/",
       });
 
       res.json({
@@ -98,11 +95,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         },
       });
     } else {
-      res.status(400).json({ message: "Invalid credentials" });
+      res.status(400).json({ success: false, message: "Invalid credentials" });
     }
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error("Login error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -112,7 +109,7 @@ export const getCurrentUser = async (
 ): Promise<void> => {
   try {
     // req.user is set by your auth middleware
-    const user = await User.findById(req.user?.id).select("-password");
+    const user = await User.findById(req.user?.id).select("-password -refreshToken");
 
     if (!user) {
       res.status(404).json({ success: false, message: "User not found" });
@@ -128,6 +125,7 @@ export const getCurrentUser = async (
       },
     });
   } catch (error) {
+    console.error("Get current user error:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -140,39 +138,64 @@ export const refreshAccessToken = async (
   try {
     //get refresh token from cookie
     const refreshToken = req.cookies.refreshToken;
+    
     if (!refreshToken) {
-      res.status(401).json({ message: "Unauthenticated" });
+      res.status(401).json({ 
+        success: false, 
+        message: "No refresh token provided", 
+        expired: true 
+      });
       return;
     }
 
-    //verify refresh token
-    const decoded = verifyRefreshToken(refreshToken);
-    if (!decoded) {
-      res.status(401).json({ message: "Unauthenticated" });
-      return;
+    try {
+      //verify refresh token
+      const decoded = verifyRefreshToken(refreshToken);
+      if (!decoded) {
+        res.status(401).json({ 
+          success: false, 
+          message: "Invalid refresh token", 
+          expired: true 
+        });
+        return;
+      }
+
+      //check if user exists and token is valid
+      const user = await User.findById(decoded.id) as (IUser & { _id: any }) | null;
+
+      if (!user || user.refreshToken !== refreshToken) {
+        res.status(401).json({ 
+          success: false, 
+          message: "Invalid refresh token or user not found", 
+          expired: true 
+        });
+        return;
+      }
+
+      //generate new access token
+      const accessToken = generateAccessToken(user._id.toString());
+
+      // Success response
+      res.json({
+        success: true,
+        data: {
+          accessToken,
+        },
+      });
+    } catch (tokenError) {
+      console.error("Token verification error:", tokenError);
+      res.status(401).json({ 
+        success: false, 
+        message: "Invalid or expired refresh token", 
+        expired: true 
+      });
     }
-
-    //check if user exists and token is valid
-    const user = (await User.findById(decoded.id)) as
-      | (IUser & { _id: any })
-      | null;
-
-    if (!user || user.refreshToken !== refreshToken) {
-      res.status(401).json({ message: "Unauthenticated" });
-      return;
-    }
-
-    //generate new access token
-    const accessToken = generateAccessToken(user._id.toString());
-    res.json({
-      success: true,
-      data: {
-        accessToken,
-      },
-    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error("Refresh token error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Internal server error" 
+    });
   }
 };
 
@@ -188,10 +211,16 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
     }
 
     //clear the cookie
-    res.clearCookie("refreshToken");
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      path: "/"
+    });
+    
     res.json({ success: true, message: "Logged out successfully" });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error("Logout error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };

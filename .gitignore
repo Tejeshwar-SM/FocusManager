@@ -4,3 +4,4 @@ node_modules
 ./backend/env
 dist
 build
+./frontend/.env.local

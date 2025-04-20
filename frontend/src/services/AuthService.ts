@@ -1,100 +1,64 @@
-import axios from "axios";
-import socketService from "./SocketService";
+import api from './api';
+import socketService from './SocketService';
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api"; // Use port 5000
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
-//create axios instance
-const api = axios.create({
-  baseURL: API_URL,
-  withCredentials: true,
-});
+console.log("API URL:", API_URL); // Debugging
 
-//request interceptor to add the auth token header to requests
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-//response interceptor to refresh token on receiving token expired error
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    if (
-      error.response?.status === 401 &&
-      !originalRequest._retry &&
-      error.response?.data?.expired
-    ) {
-      originalRequest._retry = true;
-      
-      try {
-        //try to refresh the token
-        const { data } = await axios.post(
-          `${API_URL}/auth/refreshToken`,
-          {},
-          { withCredentials: true }
-        );
-        
-        //store the new token in localstorage
-        localStorage.setItem("accessToken", data.data.accessToken);
-
-        //update the original request with new token
-        originalRequest.headers["Authorization"] = `Bearer ${data.data.accessToken}`;
-
-        //retry the original request
-        return api(originalRequest);
-      } catch (refreshError) {
-        //redirect to login page
-        localStorage.removeItem("accessToken");
-        // Disconnect socket on token refresh failure
-        socketService.disconnect();
-        window.location.href = "/login";
-        return Promise.reject(refreshError);
-      }
-    }
-    
-    return Promise.reject(error);
-  }
-);
-
-//auth service
+// Auth service that uses the common api instance
 const AuthService = {
-  //register a new user
+  // Register a new user
   register: async (name: string, email: string, password: string) => {
-    const response = await api.post("/auth/register", {
+    try {
+      console.log("Registering user:", { name, email });
+      const response = await api.post("/auth/register", {
         name,
         email,
         password
-    });
+      });
 
-    if(response.data.success) {
+      if (response.data.success) {
         localStorage.setItem("accessToken", response.data.data.accessToken);
-        // Connect socket after successful registration
+        localStorage.setItem("userData", JSON.stringify({
+          id: response.data.data.id,
+          name: response.data.data.name,
+          email: response.data.data.email
+        }));
         socketService.connect();
+      }
+      return response.data;
+    } catch (error: any) {
+      console.error("Registration error details:", error.response?.data || error.message);
+      throw error;
     }
-    return response.data;
   },
 
-  //login user
+  // Login user
   login: async (email: string, password: string) => {
-    const response = await api.post('/auth/login', {
+    try {
+      console.log("Attempting login for:", email);
+      
+      const response = await api.post('/auth/login', {
         email,
         password
-    });
+      });
 
-    if(response.data.success) {
+      console.log("Login response:", response.data);
+
+      if (response.data.success) {
         localStorage.setItem("accessToken", response.data.data.accessToken);
-        // Connect socket after successful login
+        localStorage.setItem("userData", JSON.stringify({
+          id: response.data.data.id,
+          name: response.data.data.name,
+          email: response.data.data.email
+        }));
         socketService.connect();
+      }
+      return response.data;
+    } catch (error: any) {
+      console.error("Login error details:", error.response?.data || error.message);
+      throw error;
     }
-    return response.data;
   },
 
   getCurrentUser: async () => {
@@ -107,16 +71,27 @@ const AuthService = {
     }
   },
 
-  //logout user
-  logout: async ()=> {
+  // Validate token (to check if user is logged in)
+  validateToken: async () => {
+    try {
+      const response = await api.get('/auth/me');
+      return response.data.success;
+    } catch (error) {
+      return false;
+    }
+  },
+
+  // Logout user
+  logout: async () => {
     try {
       const response = await api.post("/auth/logout");
       localStorage.removeItem("accessToken");
-      // Disconnect socket on logout
+      localStorage.removeItem("userData");
       socketService.disconnect();
       return response.data;
     } catch (error) {
       localStorage.removeItem("accessToken");
+      localStorage.removeItem("userData");
       socketService.disconnect();
       throw error;
     }

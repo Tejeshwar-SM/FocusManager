@@ -17,8 +17,8 @@ router.post("/login", login);
 
 router.get("/me", protect, getCurrentUser);
 
-//POST /api/auth/refreshtoken to refresh accesss token
-router.post("/refreshToken", refreshAccessToken);
+//POST /api/auth/refresh to refresh accesss token
+router.post("/refresh", refreshAccessToken);
 
 //POST /api/auth/logout to logout user
 router.post("/logout", logout);

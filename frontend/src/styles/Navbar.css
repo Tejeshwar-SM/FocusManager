@@ -302,6 +302,7 @@
 
 .dropdown-item svg {
   margin-right: 0.75rem;
+  min-width: 16px;
 }
 
 .navbar-dark .dropdown-item {
@@ -334,6 +335,25 @@
 .navbar-dark .dropdown-item.logout:hover {
   background-color: #4a5568;
   color: #fc8181;
+}
+
+/* Theme toggle specific styling */
+.dropdown-item.theme-toggle {
+  color: #4a5568;
+}
+
+.navbar-dark .dropdown-item.theme-toggle {
+  color: #a0aec0;
+}
+
+.dropdown-item.theme-toggle:hover {
+  background-color: #f7fafc;
+  color: #3498db;
+}
+
+.navbar-dark .dropdown-item.theme-toggle:hover {
+  background-color: #4a5568;
+  color: #63b3ed;
 }
 
 /* Mobile menu toggle */
@@ -494,6 +514,14 @@
   text-align: left;
   cursor: pointer;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.theme-icon, 
+.logout-icon {
+  margin-right: 0.75rem;
+  min-width: 16px;
 }
 
 .theme-toggle-button {

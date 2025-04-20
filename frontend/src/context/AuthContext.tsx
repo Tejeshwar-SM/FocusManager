@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, ReactNode } from "react";
-import AuthService from "../services/AuthService"; // Import AuthService instead of axios
+import AuthService from "../services/AuthService";
+import socketService from "../services/SocketService";
 
 // Define user type
 interface User {
@@ -60,37 +61,42 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const verifyAuth = async () => {
       try {
+        const storedData = localStorage.getItem("userData");
         const token = localStorage.getItem("accessToken");
-        const storedUserData = localStorage.getItem("userData");
 
-        if (!token || !storedUserData) {
-          // No token or user data found
-          setLoading(false);
-          return;
-        }
-
-        // Try to verify token by making a request to get current user
-        const response = await AuthService.getCurrentUser();
-
-        if (response.success) {
-          // Token is valid, update user data
-          const userData = {
-            id: response.data.id,
-            name: response.data.name,
-            email: response.data.email,
-          };
-          setUser(userData);
-          localStorage.setItem("userData", JSON.stringify(userData));
+        // If we have both user data and token, check if token is valid
+        if (storedData && token) {
+          const userData = JSON.parse(storedData);
+          
+          try {
+            // Verify with backend if token is valid
+            const isValid = await AuthService.validateToken();
+            
+            if (isValid) {
+              // If valid, set user and connect socket
+              setUser(userData);
+              socketService.connect();
+            } else {
+              // If not valid, clear storage
+              console.log("Invalid token - clearing auth state");
+              localStorage.removeItem("accessToken");
+              localStorage.removeItem("userData");
+              setUser(null);
+            }
+          } catch (error) {
+            console.error("Token validation error:", error);
+            // If verification fails, clear storage
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("userData");
+            setUser(null);
+          }
         } else {
-          // Token might be invalid, clear storage
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("userData");
+          // If no token or user data, set user to null
+          setUser(null);
         }
       } catch (error) {
         console.error("Auth verification error:", error);
-        // Clear potentially invalid data
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("userData");
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -105,22 +111,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
 
     try {
-      // Use AuthService
       const response = await AuthService.register(name, email, password);
-
-      // Store user data separately from token
-      const userData = {
-        id: response.data.id,
-        name: response.data.name,
-        email: response.data.email,
-      };
-
-      setUser(userData);
-      localStorage.setItem("userData", JSON.stringify(userData));
+      if (response.success) {
+        setUser({
+          id: response.data.id,
+          name: response.data.name,
+          email: response.data.email,
+        });
+      } else {
+        setError(response.message || "Registration failed");
+      }
     } catch (error: any) {
-      setError(error.response?.data?.message || "Registration Failed");
       console.error("Registration error:", error);
-      throw error; // Rethrow to allow component to handle it
+      setError(error.response?.data?.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -132,22 +135,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
 
     try {
-      // Use AuthService
       const response = await AuthService.login(email, password);
-
-      // Store user data separately from token
-      const userData = {
-        id: response.data.id,
-        name: response.data.name,
-        email: response.data.email,
-      };
-
-      setUser(userData);
-      localStorage.setItem("userData", JSON.stringify(userData));
+      if (response.success) {
+        setUser({
+          id: response.data.id,
+          name: response.data.name,
+          email: response.data.email,
+        });
+      } else {
+        setError(response.message || "Login failed");
+      }
     } catch (error: any) {
-      setError(error.response?.data?.message || "Login failed");
       console.error("Login error:", error);
-      throw error; // Rethrow to allow component to handle it
+      setError(error.response?.data?.message || "Invalid credentials. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -156,14 +156,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Logout user
   const logout = async () => {
     try {
-      await AuthService.logout(); // Use AuthService
+      await AuthService.logout();
+      setUser(null);
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
-      // Always clean up local storage and state
-      localStorage.removeItem("userData");
+      // Always clear local state regardless of API success
       localStorage.removeItem("accessToken");
-      setUser(null);
+      localStorage.removeItem("userData");
+      socketService.disconnect();
     }
   };
 
