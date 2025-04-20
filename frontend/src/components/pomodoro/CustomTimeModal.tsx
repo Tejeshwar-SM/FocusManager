@@ -1,5 +1,5 @@
 import React from "react";
-import "../../styles/pomodoro/CustomTimeModal.css";
+import styles from "../../styles/pomodoro/PomodoroPage.module.css";
 
 interface CustomTimeModalProps {
   customTime: number;
@@ -14,35 +14,63 @@ const CustomTimeModal: React.FC<CustomTimeModalProps> = ({
   onSave,
   onClose,
 }) => {
+  // Function to handle preset button clicks
+  const handlePresetClick = (value: number) => {
+    // Create a synthetic event object to pass to the onChange handler
+    const syntheticEvent = {
+      target: { value: String(value) },
+    } as React.ChangeEvent<HTMLInputElement>;
+    onChange(syntheticEvent);
+  };
+
   return (
-    <div className="custom-time-modal">
-      <div className="modal-content">
-        <h3>Set Custom Timer</h3>
-        <div className="time-input-container">
-          <label>
-            Focus Duration (1-180 minutes):
+    // Use styles from PomodoroPage.module.css
+    <div className={styles.modalOverlay} onClick={onClose}>
+      {" "}
+      {/* Close on backdrop click */}
+      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+        {" "}
+        {/* Prevent closing when clicking inside content */}
+        <h3>Set Custom Focus Time</h3>
+        <div className={styles.customTimeInputGroup}>
+          <label htmlFor="customTime">Set custom focus duration:</label>
+          <div className={styles.customTimeInputWrapper}>
             <input
+              id="customTime"
               type="number"
               min="1"
               max="180"
               value={customTime}
               onChange={onChange}
+              className={styles.customTimeInput}
             />
-          </label>
-          <div className="preset-times">
-            <button onClick={() => onChange({ target: { value: "15" } } as React.ChangeEvent<HTMLInputElement>)}>15m</button>
-            <button onClick={() => onChange({ target: { value: "25" } } as React.ChangeEvent<HTMLInputElement>)}>25m</button>
-            <button onClick={() => onChange({ target: { value: "30" } } as React.ChangeEvent<HTMLInputElement>)}>30m</button>
-            <button onClick={() => onChange({ target: { value: "45" } } as React.ChangeEvent<HTMLInputElement>)}>45m</button>
-            <button onClick={() => onChange({ target: { value: "60" } } as React.ChangeEvent<HTMLInputElement>)}>60m</button>
+            <span>minutes</span>
           </div>
         </div>
-        <div className="modal-actions">
-          <button onClick={onClose}>Cancel</button>
-          <button onClick={onSave}>Save</button>
+        {/* Optional: Preset times - ensure styles exist */}
+        <div className={styles.presetTimes}>
+          <button onClick={() => handlePresetClick(15)}>15m</button>
+          <button onClick={() => handlePresetClick(25)}>25m</button>
+          <button onClick={() => handlePresetClick(30)}>30m</button>
+          <button onClick={() => handlePresetClick(45)}>45m</button>
+          <button onClick={() => handlePresetClick(60)}>60m</button>
+        </div>
+        <div className={styles.modalActions}>
+          <button
+            onClick={onClose}
+            className={`${styles.modalButton} ${styles.cancelButton}`}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onSave}
+            className={`${styles.modalButton} ${styles.confirmButton}`}
+          >
+            Save
+          </button>
         </div>
       </div>
-      <div className="modal-backdrop" onClick={onClose} />
+      {/* Removed separate backdrop div as overlay handles it */}
     </div>
   );
 };

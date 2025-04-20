@@ -1,0 +1,188 @@
+.graphContainer {
+    margin-top: var(--spacing-6); /* Add some space above the graph */
+    padding: var(--spacing-4);
+    background-color: var(--color-surface); /* Match container background */
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--color-border);
+    overflow-x: auto; /* Allow horizontal scrolling on small screens */
+    position: relative; /* Needed for absolute positioning of tooltip */
+  }
+  
+  /* Container for the main graph grid (day labels + weeks) */
+  .graph {
+    display: inline-flex; /* Use inline-flex for horizontal layout */
+    gap: 3px; /* Gap between day labels column and weeks container */
+    align-items: flex-start; /* Align items to the top */
+    /* Add padding to ensure month labels don't overlap */
+    padding-top: var(--spacing-4); /* Space for month labels */
+    position: relative; /* Context for month labels */
+  }
+  
+  /* Month Labels - Positioned above the main graph grid */
+  .monthsContainer {
+      display: grid; /* Use grid for positioning month labels */
+      /* grid-template-columns defined inline based on number of weeks */
+      position: absolute; /* Position relative to graphContainer */
+      top: var(--spacing-2); /* Position above the graph grid */
+      left: calc(12px + 3px + var(--spacing-2)); /* Align with start of weeks grid (adjust if day label width changes) */
+      width: max-content; /* Ensure it spans the width of the weeks */
+      pointer-events: none; /* Don't interfere with mouse events */
+  }
+  
+  .monthLabel {
+      font-size: 0.75rem;
+      color: var(--color-text-secondary);
+      grid-row: 1; /* All labels in the first row */
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      /* grid-column-start is set inline */
+  }
+  
+  
+  /* Day Labels Column (Mon, Wed, Fri) */
+  .dayLabels {
+      display: flex;
+      flex-direction: column;
+      gap: 3px; /* Match week gap */
+      padding-right: var(--spacing-2); /* Space between labels and grid */
+      /* Align with the grid cells vertically */
+      padding-top: calc(12px + 3px); /* Align with second row (Mon) - adjust if day size changes */
+      font-size: 0.75rem;
+      color: var(--color-text-secondary);
+      flex-shrink: 0; /* Prevent shrinking */
+  }
+  
+  .dayLabel {
+      height: 12px; /* Match day square size */
+      line-height: 12px; /* Center text vertically */
+      text-align: center;
+  }
+  
+  /* Container for all the week columns */
+  .weeksContainer {
+    display: flex;
+    flex-direction: row; /* Weeks are laid out horizontally */
+    gap: 3px; /* Gap between weeks */
+  }
+  
+  /* A single week column */
+  .week {
+    display: flex;
+    flex-direction: column; /* Days within a week are stacked vertically */
+    gap: 3px; /* Gap between days in a week */
+  }
+  
+  /* Individual day square */
+  .day {
+    width: 12px; /* Size of each square */
+    height: 12px;
+    border-radius: var(--border-radius-sm); /* Slightly rounded corners */
+    background-color: var(--color-surface-hover); /* Default background for squares */
+    border: 1px solid rgba(0, 0, 0, 0.05); /* Subtle border */
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease-out;
+    cursor: default; /* Indicate it's not directly clickable for action */
+    outline: none; /* Remove default focus outline if using custom */
+  }
+  
+  /* Style for empty padding days */
+  .day.empty {
+      background-color: transparent; /* Make padding days invisible */
+      border-color: transparent;
+      pointer-events: none; /* Ignore mouse events */
+  }
+  
+  /* Hover/Focus effect for day squares */
+  .day:not(.empty):hover {
+      transform: scale(1.1); /* Slightly enlarge on hover */
+      border-color: rgba(0, 0, 0, 0.2); /* Darker border on hover */
+  }
+  .day:not(.empty):focus-visible {
+      /* Add a distinct focus style for keyboard navigation */
+      box-shadow: 0 0 0 2px var(--color-primary);
+      z-index: 1; /* Bring focused element slightly forward */
+  }
+  
+  
+  /* Color Levels - Using CSS Variables for the red theme */
+  /* Level 0: No activity */
+  .day.level-0 {
+    background-color: var(--color-surface-secondary, #ebedf0); /* Use variable, fallback */
+    opacity: 0.7; /* Make it slightly transparent */
+  }
+  /* Ensure dark mode variable exists */
+  body[data-theme='dark'] .day.level-0 {
+      background-color: var(--color-surface-secondary, #2a2a2a);
+  }
+  
+  
+  /* Level 1: Lightest Red */
+  .day.level-1 {
+    background-color: var(--color-streak-1);
+    opacity: 1;
+  }
+  
+  /* Level 2 */
+  .day.level-2 {
+    background-color: var(--color-streak-2);
+    opacity: 1;
+  }
+  
+  /* Level 3 */
+  .day.level-3 {
+    background-color: var(--color-streak-3);
+    opacity: 1;
+  }
+  
+  /* Level 4 */
+  .day.level-4 {
+    background-color: var(--color-streak-4);
+    opacity: 1;
+  }
+  
+  /* Level 5: Darkest Red */
+  .day.level-5 {
+    background-color: var(--color-streak-5);
+    opacity: 1;
+  }
+  
+  /* Tooltip Styling */
+  .tooltip {
+    position: absolute; /* Position relative to graphContainer */
+    background-color: var(--color-tooltip-bg, #333); /* Use variable, fallback */
+    color: var(--color-tooltip-text, #fff); /* Use variable, fallback */
+    padding: var(--spacing-2) var(--spacing-3);
+    border-radius: var(--border-radius-md);
+    font-size: 0.8rem;
+    white-space: nowrap; /* Prevent wrapping */
+    z-index: 10; /* Ensure tooltip is above squares */
+    pointer-events: none; /* Tooltip shouldn't interfere with mouse events */
+    box-shadow: var(--shadow-md);
+    /* Transform is set inline via style prop */
+  }
+  
+  /* Legend Styling */
+  .legend {
+      margin-top: var(--spacing-4);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end; /* Align legend to the right */
+      gap: var(--spacing-1);
+      font-size: 0.8rem;
+      color: var(--color-text-secondary);
+      padding-right: var(--spacing-2); /* Align with graph edge */
+  }
+  
+  .legendLabel {
+      margin: 0 var(--spacing-1);
+  }
+  
+  /* Ensure legend squares use the day styles */
+  .legend .day {
+      cursor: default;
+      border-color: rgba(0, 0, 0, 0.1); /* Slightly visible border for legend squares */
+  }
+  .legend .day:hover {
+      transform: none; /* Disable hover effect on legend squares */
+  }
+  

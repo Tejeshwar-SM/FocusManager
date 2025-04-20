@@ -1,4 +1,4 @@
-// src/controllers/pomodoroController.ts (Corrected)
+
 import { Request, Response } from "express";
 import mongoose from "mongoose";
 import PomodoroSession, {
@@ -162,24 +162,24 @@ export const getStats = async (req: Request, res: Response): Promise<void> => {
   try {
     const { date } = req.query;
     console.log("Stats requested with date param:", date);
-    
+
     // Get today's date (midnight)
     const targetDate = date ? new Date(date as string) : new Date();
-    
+
     // Reset time to start of day (midnight)
     targetDate.setHours(0, 0, 0, 0);
-    
+
     // Create date for end of day (next day midnight)
     const nextDay = new Date(targetDate);
     nextDay.setDate(targetDate.getDate() + 1);
-    
+
     console.log("Filtering sessions between:", targetDate, "and", nextDay);
 
     // Build match criteria to get COMPLETED FOCUS sessions for this user on the target date
     const matchCriteria = {
       user: new mongoose.Types.ObjectId(String(req.user?.id)),
       status: SessionStatus.COMPLETED,
-      type: SessionType.FOCUS,
+      type: SessionType.FOCUS, // Only count focus time for daily stats
       startTime: { $gte: targetDate, $lt: nextDay }
     };
 
@@ -214,6 +214,63 @@ export const getStats = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+
+// Get daily focus time stats for the contribution graph
+export const getDailyStats = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ success: false, message: "User not authenticated" });
+      return;
+    }
+
+    // Calculate the date range (e.g., last 365 days)
+    const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999); // End of today
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - 364); // Go back 364 days to get 365 days total
+    startDate.setHours(0, 0, 0, 0); // Start of that day
+
+    // Aggregate completed FOCUS sessions within the date range, grouped by day
+    const dailyStats = await PomodoroSession.aggregate([
+      {
+        $match: {
+          user: new mongoose.Types.ObjectId(userId),
+          status: SessionStatus.COMPLETED,
+          type: SessionType.FOCUS,
+          startTime: { $gte: startDate, $lte: endDate },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$startTime", timezone: "UTC" }, // Group by date string YYYY-MM-DD in UTC
+          },
+          totalDuration: { $sum: "$duration" }, // Sum duration for each day
+        },
+      },
+      {
+        $project: {
+          _id: 0, // Remove the default _id
+          date: "$_id", // Rename _id to date
+          totalDuration: 1,
+        },
+      },
+      {
+        $sort: { date: 1 }, // Sort by date ascending
+      },
+    ]);
+
+    res.json({
+      success: true,
+      data: dailyStats, // Returns an array like [{ date: "YYYY-MM-DD", totalDuration: number }]
+    });
+  } catch (error) {
+    console.error("Couldn't get daily stats", error);
+    res.status(500).json({ success: false, message: "Server Error fetching daily stats" });
+  }
+};
+
 
 // **** REMOVE updateSession endpoint if it only updated task name ****
 // If updateSession is used for other fields, keep it, but it's NOT needed for task linking anymore.

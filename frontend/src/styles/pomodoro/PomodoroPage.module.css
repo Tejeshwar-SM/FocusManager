@@ -1,43 +1,641 @@
-
+/* --- PomodoroPage General Layout --- */
 .pomodoroPage {
-  max-width: 700px; 
+  padding: var(--spacing-6);
+  max-width: 1200px;
   margin: 0 auto;
-  padding: var(--spacing-8) var(--spacing-4); 
-  font-family: inherit;
-  color: var(--color-text); 
 }
 
 .pomodoroHeader {
   text-align: center;
-  margin-bottom: var(--spacing-8); 
+  margin-bottom: var(--spacing-8);
 }
 
 .pomodoroHeader h1 {
-  margin-top: 0;
-  margin-bottom: var(--spacing-2); 
-  color: var(--color-primary);
   font-size: 2.5rem;
   font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-2);
 }
 
 .pomodoroHeader p {
-  color: var(--color-text-secondary);
   font-size: 1.1rem;
-  margin: 0;
+  color: var(--color-text-secondary);
 }
 
+/* --- Timer Container --- */
 .timerContainer {
-  background-color: var(--color-surface); 
-  color: var(--color-text);
-  border-radius: var(--border-radius-xl); 
-  padding: var(--spacing-8); 
+  background-color: var(--color-surface);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-8);
   box-shadow: var(--shadow-lg);
-  border: 1px solid var(--color-border); 
-  margin-bottom: var(--spacing-8); 
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: var(--spacing-8);
+  border: 1px solid var(--color-border);
+}
+
+/* --- SessionTypeSelector --- */
+.sessionTypeSelector {
+  display: flex;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-6);
+  background-color: var(--color-surface-hover);
+  padding: var(--spacing-1);
+  border-radius: var(--border-radius-md);
+}
+
+.sessionButton {
+  padding: var(--spacing-2) var(--spacing-4);
+  border: none;
+  border-radius: var(--border-radius-sm);
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.sessionButton:hover:not(:disabled) {
+  color: var(--color-text);
+}
+
+.sessionButton.active {
+  background-color: var(--color-surface);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.sessionButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* --- TimerDisplay --- */
+.timerDisplay {
+  font-size: 6rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-4);
+  font-variant-numeric: tabular-nums; /* Ensures numbers don't shift width */
+}
+
+.timerDisplay.completed {
+  color: var(--color-success);
+}
+
+/* --- TaskInput --- */
+.taskInputWrapper {
+  width: 100%;
+  max-width: 400px; /* Limit width */
+  margin-bottom: var(--spacing-6);
+  position: relative; /* For dropdown positioning */
 }
 
 .taskInputContainer {
   position: relative;
+}
+
+.taskInput {
+  width: 100%;
+  padding: var(--spacing-3) var(--spacing-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  font-size: 1rem;
+  background-color: var(--color-input-background);
+  color: var(--color-text);
+  box-sizing: border-box; /* Include padding and border in width */
+}
+
+.taskInput:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.3);
+  outline: none;
+}
+
+.taskInput::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.taskInput:disabled {
+  background-color: var(--color-surface-hover);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.taskDropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-lg);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10;
+}
+
+.taskOption {
+  padding: var(--spacing-2) var(--spacing-3);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.taskOption:hover {
+  background-color: var(--color-surface-hover);
+}
+
+.taskTitle {
+  color: var(--color-text);
+}
+
+.taskPriority {
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--border-radius-full);
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-left: var(--spacing-2);
+}
+
+/* Define priority colors (using variables is better, but keeping local for now) */
+.low { background-color: #d1fae5; color: #065f46; }
+.medium { background-color: #fffbeb; color: #b45309; }
+.high { background-color: #fee2e2; color: #991b1b; }
+
+body[data-theme='dark'] .low { background-color: #064e3b; color: #a7f3d0; }
+body[data-theme='dark'] .medium { background-color: #78350f; color: #fef3c7; }
+body[data-theme='dark'] .high { background-color: #7f1d1d; color: #fecaca; }
+
+
+/* --- TimerControls --- */
+.timerControls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
   margin-bottom: var(--spacing-6);
+}
+
+.controlButton {
+  padding: var(--spacing-2);
+  border: none;
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  border-radius: var(--border-radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.controlButton:hover:not(:disabled) {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.controlButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.resetButton {
+  /* Specific styles if needed, otherwise inherits .controlButton */
+}
+
+.mainActionButton {
+  padding: var(--spacing-4) var(--spacing-8);
+  font-size: 1.2rem;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--border-radius-full);
+  background-color: var(--color-primary);
+  color: var(--color-text-inverse);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), box-shadow var(--transition-fast);
+  box-shadow: var(--shadow-md);
+}
+
+.mainActionButton:hover:not(:disabled) {
+  background-color: var(--color-primary-dark);
+  box-shadow: var(--shadow-lg);
+}
+
+.mainActionButton.pauseActive {
+  background-color: var(--color-warning);
+}
+.mainActionButton.pauseActive:hover:not(:disabled) {
+  background-color: #d97706; /* Darker warning */
+}
+
+.controlButtonPlaceholder {
+  width: 40px; /* Match approx width of icon buttons */
+  height: 40px;
+}
+
+
+/* --- TimerSettings --- */
+.timerSettingsContainer {
+  display: flex;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-4); /* Add some space above settings */
+}
+
+/* Use .controlButton styles defined above */
+.settingsButton {
+  /* Inherits .controlButton */
+}
+
+.soundButton {
+  /* Inherits .controlButton */
+}
+
+/* --- CycleCounter --- */
+.cycleCounter {
+  margin-top: var(--spacing-4);
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+/* Custom Time Modal specific styles */
+/* Add these styles for the CustomTimeModal */
+
+/* Custom Time Modal specific styles */
+.customTimeInputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-4);
+  text-align: center; /* Changed from left to center */
+  align-items: center; /* Added to center the input and other elements */
+}
+
+.customTimeInputGroup label {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-1);
+}
+
+.customTimeInputGroup span {
+  color: var(--color-text-secondary);
+  margin-left: var(--spacing-2);
+}
+
+.customTimeInput {
+  padding: var(--spacing-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  background-color: var(--color-input-background);
+  color: var(--color-text);
+  font-size: 1rem;
+  width: 80px;
+  text-align: center;
+}
+
+.customTimeInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.25);
+}
+
+.customTimeInput::-webkit-inner-spin-button,
+.customTimeInput::-webkit-outer-spin-button {
+  opacity: 1;
+  height: 20px;
+}
+
+.presetTimes {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--spacing-4);
+}
+
+.presetTimes button {
+  padding: var(--spacing-1) var(--spacing-2);
+  background-color: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  color: var(--color-text);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.presetTimes button:hover {
+  background-color: var(--color-primary-light);
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+body[data-theme='dark'] .presetTimes button {
+  background-color: var(--color-surface-accent);
+}
+
+body[data-theme='dark'] .presetTimes button:hover {
+  background-color: rgba(var(--color-primary-rgb), 0.2);
+  color: var(--color-primary-light);
+}
+
+
+/* --- DailyStreakGraph --- */
+.streakGraphContainer {
+  margin-top: var(--spacing-6);
+  padding: var(--spacing-4);
+  background-color: var(--color-surface);
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--color-border);
+  position: relative;
+  box-shadow: var(--shadow-md);
+  text-align: center; /* Center the inline-block children */
+}
+
+.streakGraphContainer h2 {
+    text-align: center;
+    margin-bottom: var(--spacing-5); /* Increased margin */
+    color: var(--color-text-primary);
+    font-size: 1.5rem;
+}
+
+/* Wrapper to contain the graph elements and allow scrolling if needed */
+.graphWrapper {
+    overflow-x: auto; /* Allow horizontal scroll ONLY if content overflows */
+    padding-bottom: var(--spacing-2); /* Space for scrollbar if it appears */
+    margin-left: auto; /* Align to right if content is narrower */
+    margin-right: auto;
+    max-width: 100%; /* Ensure it doesn't exceed parent */
+}
+
+
+.loadingMessage {
+    text-align: center;
+    color: var(--color-text-secondary);
+    padding: var(--spacing-4);
+}
+
+/* Main graph layout: Use inline-flex to allow shrinking/growing */
+.graph {
+  display: inline-flex; /* Changed from flex to inline-flex */
+  gap: var(--spacing-2); /* Gap between day labels and weeks */
+  align-items: flex-start;
+  padding-top: calc(var(--spacing-4) + 1em); /* Space for month labels */
+  position: relative; /* Needed for month labels positioning */
+  min-width: min-content; /* Ensure it takes at least the content width */
+}
+
+.monthsContainer {
+  display: grid; /* Use grid for precise column alignment */
+  position: absolute;
+  top: var(--spacing-2);
+  /* Align with start of weeks grid: label width + gap + week gap */
+  left: calc(30px + var(--spacing-2) + 3px);
+  width: max-content; /* Fit content */
+  pointer-events: none; /* Don't interfere with mouse events */
+  grid-auto-flow: column; /* Flow columns horizontally */
+  grid-auto-columns: calc(16px + 3px); /* Increased from 12px to 16px to accommodate three letters */
+  gap: 0; /* No gap between grid cells */
+}
+
+.monthLabel {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  grid-row: 1; /* All labels in the first row */
+  text-align: left;
+  white-space: nowrap;
+  overflow: visible; /* Changed from 'hidden' to 'visible' to show full text */
+  padding-left: 2px; /* Slight padding */
+  min-width: 24px; /* Minimum width to ensure space for 3 letters */
+  font-weight: 500; /* Added for better visibility */
+  /* grid-column-start is set inline */
+}
+
+.dayLabels {
+  display: flex;
+  flex-direction: column;
+  gap: 3px; /* Match day gap */
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  flex-shrink: 0; /* Prevent shrinking */
+  width: 30px; /* Fixed width for labels */
+  text-align: right;
+  padding-right: var(--spacing-1);
+  /* Add proper top alignment to match the month labels spacing */
+  /* margin-top: calc(12px - 12px); This aligns with the first row of data */
+  margin-top: 0px;
+}
+
+.dayLabel {
+  height: 12px; /* Match day height */
+  line-height: 12px;
+  font-size: 0.7rem; /* Make slightly smaller to fit */
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.weeksContainer {
+  display: inline-flex; /* Changed from flex */
+  flex-direction: row;
+  gap: 3px; /* Gap between weeks */
+  min-width: min-content;
+}
+
+.week {
+  display: flex;
+  flex-direction: column;
+  gap: 3px; /* Gap between days */
+}
+
+.day {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--border-radius-sm);
+  background-color: var(--color-streak-0); /* Use variable */
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: background-color 0.2s ease-in-out, transform 0.1s ease-out;
+  cursor: default;
+  outline: none;
+}
+
+body[data-theme='dark'] .day {
+    border: 1px solid rgba(255, 255, 255, 0.07); /* Dark mode border */
+}
+
+
+.day.empty {
+    background-color: transparent;
+    border-color: transparent;
+    pointer-events: none;
+}
+
+.day:not(.empty):hover {
+    transform: scale(1.1);
+    /* Slightly darker border on hover */
+    border-color: rgba(0, 0, 0, 0.2);
+}
+body[data-theme='dark'] .day:not(.empty):hover {
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.day:not(.empty):focus-visible {
+    box-shadow: 0 0 0 2px var(--color-primary);
+    z-index: 1;
+    border-color: transparent; /* Hide border when focused */
+}
+
+/* Streak Color Levels - Use CSS Variables */
+.day.level-0 { background-color: var(--color-streak-0); }
+.day.level-1 { background-color: var(--color-streak-1); }
+.day.level-2 { background-color: var(--color-streak-2); }
+.day.level-3 { background-color: var(--color-streak-3); }
+.day.level-4 { background-color: var(--color-streak-4); }
+.day.level-5 { background-color: var(--color-streak-5); }
+
+/* Tooltip styles - UPDATED */
+.tooltip {
+  position: fixed; /* Changed from absolute to match inline style */
+  background-color: var(--color-tooltip-bg, #333); /* Use variable or fallback */
+  color: var(--color-tooltip-text, #fff); /* Use variable or fallback */
+  padding: var(--spacing-2) var(--spacing-3); /* Increased padding for better visibility */
+  border-radius: var(--border-radius-md);
+  font-size: 0.8rem;
+  font-weight: 500; /* Added font weight for better readability */
+  white-space: nowrap;
+  z-index: 1000; /* Increased z-index to ensure visibility */
+  pointer-events: none;
+  box-shadow: var(--shadow-lg); /* Stronger shadow for better visibility */
+  border: 1px solid rgba(0, 0, 0, 0.1); /* Light border for light mode */
+  /* transform is set inline */
+}
+
+/* Add explicit styles for dark mode tooltip */
+body[data-theme='dark'] .tooltip {
+  background-color: #f1f5f9; /* Light background for dark mode */
+  color: #1e293b; /* Dark text for dark mode */
+  border: 1px solid rgba(255, 255, 255, 0.2); /* Visible border for dark mode */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2); /* Extra shadow for dark mode */
+}
+
+.legend {
+    margin-top: var(--spacing-4);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* Align legend to the right */
+    gap: var(--spacing-1);
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+    padding-right: var(--spacing-2);
+    flex-wrap: wrap; /* Allow wrapping if needed */
+}
+
+.legendLabel {
+    margin: 0 var(--spacing-1);
+}
+
+.legend .day {
+    cursor: default;
+    border-color: rgba(0, 0, 0, 0.1);
+}
+body[data-theme='dark'] .legend .day {
+    border-color: rgba(255, 255, 255, 0.15);
+}
+.legend .day:hover {
+    transform: none;
+}
+
+/* --- Task Completion Modal --- */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background-color: var(--color-surface);
+  padding: var(--spacing-6);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-xl);
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+}
+
+.modalContent h3 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-2);
+  color: var(--color-text);
+}
+
+.modalContent p {
+  margin-bottom: var(--spacing-6);
+  color: var(--color-text-secondary);
+}
+
+.modalActions {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-4);
+}
+
+.modalButton {
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--border-radius-md);
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.confirmButton {
+  background-color: var(--color-success);
+  color: var(--color-text-inverse);
+  border-color: var(--color-success);
+}
+.confirmButton:hover {
+  background-color: #059669; /* Darker success */
+}
+
+.cancelButton {
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  border-color: var(--color-border);
+}
+.cancelButton:hover {
+  background-color: var(--color-surface-hover);
+  border-color: var(--color-border); /* Keep border consistent */
+}
+
+/* Dark mode specific modal styles if needed */
+body[data-theme='dark'] .modalContent {
+  background-color: var(--color-surface);
+}
+body[data-theme='dark'] .modalContent h3 {
+  color: var(--color-text);
+}
+body[data-theme='dark'] .modalContent p {
+  color: var(--color-text-secondary);
+}
+body[data-theme='dark'] .confirmButton {
+  background-color: var(--color-success);
+  color: #064e3b; /* Darker text for better contrast on light green */
+}
+body[data-theme='dark'] .confirmButton:hover {
+  background-color: #10b981;
+}
+body[data-theme='dark'] .cancelButton {
+  color: var(--color-text-secondary);
+  border-color: var(--color-border);
+}
+body[data-theme='dark'] .cancelButton:hover {
+  background-color: var(--color-surface-hover);
 }

@@ -1,5 +1,7 @@
 import React from "react";
-import "../../styles/pomodoro/CycleCounter.css";
+// Use module CSS if available, otherwise keep direct import
+// import "../../styles/pomodoro/CycleCounter.css";
+import styles from "../../styles/pomodoro/PomodoroPage.module.css"; // Or use PomodoroPage styles
 
 interface CycleCounterProps {
   cycles: number;
@@ -7,7 +9,8 @@ interface CycleCounterProps {
 
 const CycleCounter: React.FC<CycleCounterProps> = ({ cycles }) => {
   return (
-    <div className="cycle-counter">
+    // Use class from PomodoroPage.module.css or CycleCounter.module.css
+    <div className={styles.cycleCounter}>
       <span>Completed Cycles: {cycles}</span>
     </div>
   );

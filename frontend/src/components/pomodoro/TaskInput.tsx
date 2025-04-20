@@ -1,53 +1,51 @@
 import React from "react";
 import { Task } from "../../types/types";
-import "../../styles/pomodoro/TaskInput.css";
+import styles from "../../styles/pomodoro/PomodoroPage.module.css"; // Or use PomodoroPage styles
 
 interface TaskInputProps {
   currentTask: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSelect: (task: Task) => void;
-  availableTasks: Task[];
-  showDropdown: boolean;
+  availableTasks: Task[]; // Expecting already filtered tasks
+  showDropdown: boolean; // Controlled by parent
   isDisabled: boolean;
-  containerClassName?: string;
+  // inputRef?: React.RefObject<HTMLInputElement>; // Optional ref if needed
 }
 
 const TaskInput: React.FC<TaskInputProps> = ({
   currentTask,
   onChange,
   onSelect,
-  availableTasks,
+  availableTasks, // Receive filtered tasks
   showDropdown,
   isDisabled,
-  containerClassName,
+  // inputRef, // Receive ref if passed
 }) => {
   return (
-    <div className="task-input-container">
+    // Use class from PomodoroPage.module.css or TaskInput.module.css
+    <div className={styles.taskInputContainer}> {/* Use appropriate container class */}
       <input
+        // ref={inputRef} // Assign ref if passed
         type="text"
         placeholder="What are you working on?"
         value={currentTask}
         onChange={onChange}
-        onFocus={() => {}}
+        // onFocus can be handled in parent if needed for showing dropdown
         disabled={isDisabled}
-        className="task-input"
+        className={styles.taskInput} // Use appropriate input class
       />
+      {/* Dropdown is now positioned relative to the wrapper in PomodoroPage */}
       {showDropdown && availableTasks.length > 0 && (
-        <div className="task-dropdown">
-          {availableTasks
-            .filter((task) =>
-              task.title.toLowerCase().includes(currentTask.toLowerCase() || "")
-            )
-            .map((task) => (
+        <div className={styles.taskDropdown}> {/* Use appropriate dropdown class */}
+          {availableTasks.map((task) => (
               <div
                 key={task._id}
-                className="task-option"
+                className={styles.taskOption} // Use appropriate option class
                 onClick={() => onSelect(task)}
               >
-                <span className="task-title">{task.title}</span>
-                <span
-                  className={`task-priority priority-${task.priority.toLowerCase()}`}
-                >
+                <span className={styles.taskTitle}>{task.title}</span> {/* Use appropriate title class */}
+                {/* Ensure priority styles exist (e.g., styles.low, styles.medium, styles.high) */}
+                <span className={`${styles.taskPriority} ${styles[task.priority]}`}>
                   {task.priority}
                 </span>
               </div>

@@ -74,6 +74,18 @@
   --spacing-10: 2.5rem;
   --spacing-12: 3rem;
   --spacing-16: 4rem;
+
+  /* Streak graph colors (Light Mode) */
+  --color-streak-0: #ebedf0; /* Default/empty */
+  --color-streak-1: #c6e48b; /* Lightest Green */
+  --color-streak-2: #7bc96f;
+  --color-streak-3: #239a3b;
+  --color-streak-4: #196127;
+  --color-streak-5: #0e4429; /* Darkest Green */
+
+  /* Tooltip colors (Light Mode) */
+  --color-tooltip-bg: #333;
+  --color-tooltip-text: #fff;
 }
 
 /* 2. Define Dark Mode Variable Overrides using data-theme attribute */
@@ -112,6 +124,18 @@ body[data-theme='dark'] {
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+
+  /* Streak graph colors (Dark Mode) */
+  --color-streak-0: #161b22; /* Default/empty */
+  --color-streak-1: #0e4429; /* Darkest Green (inverted scale example) */
+  --color-streak-2: #006d32;
+  --color-streak-3: #26a641;
+  --color-streak-4: #39d353;
+  --color-streak-5: #56d364; /* Lightest Green */
+
+  /* Tooltip colors (Dark Mode) */
+  --color-tooltip-bg: #f1f5f9; /* Light tooltip on dark bg */
+  --color-tooltip-text: #1e293b;
 }
 
 /* 3. Base Body Styles (Apply always, using variables) */
@@ -173,12 +197,13 @@ input, select, textarea {
   color: var(--color-text);
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius-md);
+  padding: var(--spacing-2) var(--spacing-3); /* Consistent padding */
 }
 
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.3); /* Use RGB var */
 }
 
 /* 7. Dashboard-specific dark mode overrides */
@@ -249,7 +274,7 @@ body[data-theme='dark'] .auth-container input::placeholder {
 
 body[data-theme='dark'] .auth-container input:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.3); /* Use RGB var */
 }
 
 body[data-theme='dark'] .auth-container .auth-logo {
@@ -266,6 +291,7 @@ body[data-theme='dark'] .auth-container .remember-me label {
 
 body[data-theme='dark'] .auth-container .auth-button {
   background-color: var(--color-primary);
+  color: var(--color-text-inverse); /* Ensure text is readable */
 }
 
 body[data-theme='dark'] .auth-container .auth-divider {
@@ -342,6 +368,11 @@ a {
 
 a:hover {
   text-decoration: underline;
+  color: var(--color-primary-dark); /* Darken link on hover */
+}
+
+body[data-theme='dark'] a:hover {
+    color: var(--color-primary-light); /* Lighten link on hover in dark mode */
 }
 
 /* Add specific fixes for any component classes that might need attention */
@@ -349,19 +380,24 @@ body[data-theme='dark'] .main-content > * {
   color: var(--color-text);
 }
 
-/* Ensure text is visible in all containers */
-body[data-theme='dark'] div, 
-body[data-theme='dark'] p, 
-body[data-theme='dark'] h1, 
-body[data-theme='dark'] h2, 
-body[data-theme='dark'] h3, 
-body[data-theme='dark'] h4, 
-body[data-theme='dark'] h5, 
+/* Ensure text color is inherited correctly in dark mode */
+body[data-theme='dark'] div,
+body[data-theme='dark'] p,
+body[data-theme='dark'] h1,
+body[data-theme='dark'] h2,
+body[data-theme='dark'] h3,
+body[data-theme='dark'] h4,
+body[data-theme='dark'] h5,
 body[data-theme='dark'] h6,
-body[data-theme='dark'] span {
-  color: inherit;
+body[data-theme='dark'] span,
+body[data-theme='dark'] li,
+body[data-theme='dark'] label,
+body[data-theme='dark'] th,
+body[data-theme='dark'] td {
+  color: inherit; /* Use parent's color unless overridden */
 }
 
+/* Ensure components within dashboard inherit correctly */
 body[data-theme='dark'] .dashboardContainer * {
   color: inherit;
 }

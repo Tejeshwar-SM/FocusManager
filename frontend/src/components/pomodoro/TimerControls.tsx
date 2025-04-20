@@ -1,5 +1,6 @@
 import React from "react";
-import "../../styles/pomodoro/TimerControls.css";
+import styles from "../../styles/pomodoro/PomodoroPage.module.css"; // Or use PomodoroPage styles
+import { Play, Pause, RotateCcw } from "react-feather"; // Using react-feather as an example, replace if needed or use text/emoji
 
 interface TimerControlsProps {
   isActive: boolean;
@@ -18,20 +19,41 @@ const TimerControls: React.FC<TimerControlsProps> = ({
   onPause,
   onReset,
 }) => {
+  const startPauseButtonText =
+    isActive && !isPaused
+      ? "Pause"
+      : isPaused
+      ? "Resume"
+      : timerCompleted
+      ? "Restart"
+      : "Start";
+  const startPauseButtonAction = isActive && !isPaused ? onPause : onStart;
+  const StartPauseIcon = isActive && !isPaused ? Pause : Play;
+
   return (
-    <div className="timer-controls">
-      {!isActive || isPaused ? (
-        <button className="start-btn" onClick={onStart}>
-          {isPaused ? "Resume" : timerCompleted ? "Restart" : "Start"}
-        </button>
-      ) : (
-        <button className="pause-btn" onClick={onPause}>
-          Pause
-        </button>
-      )}
-      <button className="reset-btn" onClick={onReset}>
-        Reset
+    // Use class from PomodoroPage.module.css or TimerControls.module.css
+    <div className={styles.timerControls}>
+      <button
+        onClick={onReset}
+        className={`${styles.controlButton} ${styles.resetButton}`}
+        title="Reset Timer"
+      >
+        <RotateCcw size={20} /> {/* Example Icon */}
+        {/* Reset */}
       </button>
+      <button
+        onClick={startPauseButtonAction}
+        className={`${styles.controlButton} ${styles.mainActionButton} ${
+          isActive && !isPaused ? styles.pauseActive : ""
+        }`}
+        title={startPauseButtonText}
+      >
+        <StartPauseIcon size={28} /> {/* Example Icon */}
+        <span>{startPauseButtonText}</span>
+      </button>
+      {/* Placeholder for other buttons if needed */}
+      <div className={styles.controlButtonPlaceholder}></div>{" "}
+      {/* Add a placeholder to balance layout if needed */}
     </div>
   );
 };

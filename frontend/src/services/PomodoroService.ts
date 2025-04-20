@@ -7,6 +7,12 @@ interface StartSessionPayload {
   taskId?: string | null; // **** CHANGED from task?: string ****
 }
 
+// Define the expected response type for daily stats
+export interface DailyStat {
+    date: string; // YYYY-MM-DD
+    totalDuration: number; // Total focus minutes for that day
+}
+
 const PomodoroService = {
   // Start a new pomodoro session
   startSession: (sessionData: StartSessionPayload) => {
@@ -52,6 +58,22 @@ const PomodoroService = {
 
     console.log("Requesting pomodoro stats with date:", queryParams.date);
     return api.get(`/pomodoro/stats`, { params: queryParams });
+  },
+
+  // Get daily focus time statistics for the contribution graph
+  getDailyStats: async (): Promise<DailyStat[]> => {
+    try {
+      const response = await api.get<{ success: boolean; data: DailyStat[] }>("/pomodoro/daily-stats");
+      if (response.data.success) {
+        return response.data.data;
+      } else {
+        console.error("Failed to fetch daily stats:", response.data);
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching daily stats:", error);
+      return [];
+    }
   },
 };
 
