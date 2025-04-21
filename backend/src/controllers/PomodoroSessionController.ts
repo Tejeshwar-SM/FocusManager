@@ -1,11 +1,10 @@
-
 import { Request, Response } from "express";
 import mongoose from "mongoose";
 import PomodoroSession, {
   IPomodoroSession,
   SessionStatus,
-  SessionType, // Make sure SessionType enum is imported/available
-} from "../models/PomodoroSession"; // Adjust path if needed
+  SessionType,
+} from "../models/PomodoroSession";
 import { updateLeaderboardForUser } from "./LeaderboardController";
 
 //start a new pomodoro session
@@ -29,7 +28,7 @@ export const startSession = async (
 
     // Construct session data
     const sessionData: Partial<IPomodoroSession> = {
-      user: req.user?.id ? new mongoose.Types.ObjectId(req.user.id) : undefined,
+      userId: req.user?.id ? new mongoose.Types.ObjectId(req.user.id) : undefined,
       startTime: new Date(),
       duration,
       status: SessionStatus.IN_PROGRESS,
@@ -64,7 +63,7 @@ export const completeSession = async (
   try {
     const session = await PomodoroSession.findOne({
       _id: req.params.id,
-      user: req.user?.id ? new mongoose.Types.ObjectId(req.user.id) : undefined,
+      userId: req.user?.id ? new mongoose.Types.ObjectId(req.user.id) : undefined,
       status: SessionStatus.IN_PROGRESS,
     });
 
@@ -75,11 +74,10 @@ export const completeSession = async (
 
     session.status = SessionStatus.COMPLETED;
     session.endTime = new Date();
-    // Only update cycles if provided, otherwise keep existing (though it starts at 0 now)
+    // Only update cycles if provided, otherwise keep existing
     if (req.body.completedCycles !== undefined) {
         session.completedCycles = Number(req.body.completedCycles); // Ensure it's a number
     }
-
 
     await session.save();
     if (req.user?.id) {
@@ -103,7 +101,7 @@ export const cancelSession = async (
   try {
     const session = await PomodoroSession.findOne({
       _id: req.params.id,
-      user: req.user?.id,
+      userId: req.user?.id,
       status: SessionStatus.IN_PROGRESS,
     });
 
@@ -135,7 +133,7 @@ export const getSessions = async (
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
 
     let query = PomodoroSession.find({
-      user: req.user?.id ? new mongoose.Types.ObjectId(req.user.id) : undefined,
+      userId: req.user?.id ? new mongoose.Types.ObjectId(req.user.id) : undefined,
     })
     .sort({ startTime: -1 })
     .populate<{ taskId: { _id: string, title: string } }>('taskId', 'title');
@@ -155,7 +153,6 @@ export const getSessions = async (
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
-
 
 // Get stats (keep as is or refine if needed)
 export const getStats = async (req: Request, res: Response): Promise<void> => {
@@ -177,7 +174,7 @@ export const getStats = async (req: Request, res: Response): Promise<void> => {
 
     // Build match criteria to get COMPLETED FOCUS sessions for this user on the target date
     const matchCriteria = {
-      user: new mongoose.Types.ObjectId(String(req.user?.id)),
+      userId: new mongoose.Types.ObjectId(String(req.user?.id)),
       status: SessionStatus.COMPLETED,
       type: SessionType.FOCUS, // Only count focus time for daily stats
       startTime: { $gte: targetDate, $lt: nextDay }
@@ -235,7 +232,7 @@ export const getDailyStats = async (req: Request, res: Response): Promise<void> 
     const dailyStats = await PomodoroSession.aggregate([
       {
         $match: {
-          user: new mongoose.Types.ObjectId(userId),
+          userId: new mongoose.Types.ObjectId(userId),
           status: SessionStatus.COMPLETED,
           type: SessionType.FOCUS,
           startTime: { $gte: startDate, $lte: endDate },
@@ -270,8 +267,3 @@ export const getDailyStats = async (req: Request, res: Response): Promise<void> 
     res.status(500).json({ success: false, message: "Server Error fetching daily stats" });
   }
 };
-
-
-// **** REMOVE updateSession endpoint if it only updated task name ****
-// If updateSession is used for other fields, keep it, but it's NOT needed for task linking anymore.
-// export const updateSession = async(...) => { ... }

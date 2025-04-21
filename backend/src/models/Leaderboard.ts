@@ -6,7 +6,7 @@ export interface ILeaderboard extends Document {
   completedSessions: number;
   completedTasks: number;
   weeklyScore: number;
-  monthlyScore: number;
+  dailyScore: number; // Added daily score instead of monthlyScore
   lastUpdated: Date;
 }
 
@@ -34,7 +34,7 @@ const LeaderboardSchema = new Schema(
       type: Number,
       default: 0,
     },
-    monthlyScore: {
+    dailyScore: {
       type: Number,
       default: 0,
     },
@@ -52,6 +52,6 @@ const LeaderboardSchema = new Schema(
 LeaderboardSchema.index({ totalFocusTime: -1 });
 LeaderboardSchema.index({ completedSessions: -1 });
 LeaderboardSchema.index({ weeklyScore: -1 });
-LeaderboardSchema.index({ monthlyScore: -1 });
+LeaderboardSchema.index({ dailyScore: -1 });
 
 export default mongoose.model<ILeaderboard>("Leaderboard", LeaderboardSchema);

@@ -43,18 +43,6 @@ const SessionIcon = () => (
   </svg>
 );
 
-const TaskIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="16"
-    height="16"
-    fill="currentColor"
-    viewBox="0 0 16 16"
-  >
-    <path d="M9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.5L9.5 0zm0 1v2A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5zM11 6H5v2h6V6zm0 3H5v2h6V9zm0 3H5v2h6v-2z" />
-  </svg>
-);
-
 const UserIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -82,13 +70,13 @@ const EmptyStateIcon = () => (
 
 const LeaderboardPage: React.FC = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<"allTime" | "weekly" | "monthly">(
+  const [activeTab, setActiveTab] = useState<"allTime" | "weekly" | "daily">(
     "allTime"
   );
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardData>({
     allTime: [],
     weekly: [],
-    monthly: [],
+    daily: [], 
   });
   const [userRanking, setUserRanking] = useState<LeaderboardEntry | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -121,43 +109,75 @@ const LeaderboardPage: React.FC = () => {
     const fetchLeaderboardData = async () => {
       try {
         setLoading(true);
-        const [allTimeRes, weeklyRes, monthlyRes, userRes] = await Promise.all([
+        console.log("Fetching leaderboard data...");
+        
+        const [allTimeRes, weeklyRes, dailyRes, userRes] = await Promise.all([
           LeaderboardService.getLeaderboard("all"),
           LeaderboardService.getLeaderboard("weekly"),
-          LeaderboardService.getLeaderboard("monthly"),
+          LeaderboardService.getLeaderboard("daily"),
           LeaderboardService.getUserRanking(),
         ]);
 
         const allTimeData = allTimeRes.data.data;
         const weeklyData = weeklyRes.data.data;
-        const monthlyData = monthlyRes.data.data;
+        const dailyData = dailyRes.data.data;
+
+        // Debug logs for the received data
+        console.log("All-time leaderboard entries:", allTimeData.length);
+        console.log("Weekly leaderboard entries:", weeklyData.length);
+        console.log("Daily leaderboard entries:", dailyData.length);
+
+        // Check if any entries have non-zero weekly/daily scores
+        const hasWeeklyScores = weeklyData.some((entry: LeaderboardEntry) => entry.weeklyScore > 0);
+        const hasDailyScores = dailyData.some((entry: LeaderboardEntry) => entry.dailyScore > 0);
+        
+        console.log("Has non-zero weekly scores:", hasWeeklyScores);
+        console.log("Has non-zero daily scores:", hasDailyScores);
 
         setLeaderboardData({
           allTime: allTimeData,
           weekly: weeklyData,
-          monthly: monthlyData,
+          daily: dailyData,
         });
 
         // Calculate max focus time for progress bars
         const allTimeFocusTimes = allTimeData.map(
-          (entry: { totalFocusTime: any }) => entry.totalFocusTime
+          (entry: LeaderboardEntry) => entry.totalFocusTime
         );
         const weeklyFocusTimes = weeklyData.map(
-          (entry: { weeklyScore: any }) => entry.weeklyScore
+          (entry: LeaderboardEntry) => entry.weeklyScore
         );
-        const monthlyFocusTimes = monthlyData.map(
-          (entry: { monthlyScore: any }) => entry.monthlyScore
+        const dailyFocusTimes = dailyData.map(
+          (entry: LeaderboardEntry) => entry.dailyScore
         );
+
+        console.log("Max all-time focus time:", Math.max(...allTimeFocusTimes, 1));
+        console.log("Max weekly focus time:", Math.max(...weeklyFocusTimes, 1));
+        console.log("Max daily focus time:", Math.max(...dailyFocusTimes, 1));
 
         const maxAllTime = Math.max(...allTimeFocusTimes, 1);
         const maxWeekly = Math.max(...weeklyFocusTimes, 1);
-        const maxMonthly = Math.max(...monthlyFocusTimes, 1);
+        const maxDaily = Math.max(...dailyFocusTimes, 1);
 
         if (activeTab === "allTime") setMaxFocusTime(maxAllTime);
         else if (activeTab === "weekly") setMaxFocusTime(maxWeekly);
-        else setMaxFocusTime(maxMonthly);
+        else setMaxFocusTime(maxDaily);
 
-        setUserRanking(userRes.data.data);
+        // Log user ranking data
+        if (userRes?.data?.data) {
+          const userData = userRes.data.data;
+          console.log("User ranking data:", {
+            rank: userData.rank,
+            totalFocusTime: userData.totalFocusTime,
+            weeklyScore: userData.weeklyScore,
+            dailyScore: userData.dailyScore,
+            completedSessions: userData.completedSessions
+          });
+          setUserRanking(userData);
+        } else {
+          console.log("No user ranking data available");
+        }
+
         setError(null);
       } catch (err) {
         console.error("Error fetching leaderboard:", err);
@@ -172,13 +192,21 @@ const LeaderboardPage: React.FC = () => {
     // Connect to socket and subscribe to updates
     socketService.connect();
     const unsubscribe = socketService.onLeaderboardUpdate((data) => {
+      console.log("Received leaderboard update from socket");
+      console.log("Entries - All time:", data.allTime.length);
+      console.log("Entries - Weekly:", data.weekly.length);
+      console.log("Entries - Daily:", data.daily.length);
+      
       setLeaderboardData(data);
 
       // Also update user ranking if possible
       if (user && user.id) {
         const currentPeriod = activeTab === "allTime" ? "all" : activeTab;
         LeaderboardService.getUserRanking(currentPeriod)
-          .then((res) => setUserRanking(res.data.data))
+          .then((res) => {
+            console.log("Updated user ranking via socket:", res.data.data);
+            setUserRanking(res.data.data);
+          })
           .catch((err) => console.error("Failed to update user ranking:", err));
       }
     });
@@ -193,21 +221,23 @@ const LeaderboardPage: React.FC = () => {
     if (leaderboardData) {
       if (activeTab === "allTime") {
         const maxTime = Math.max(
-          ...leaderboardData.allTime.map((e) => e.totalFocusTime),
+          ...leaderboardData.allTime.map((e: LeaderboardEntry) => e.totalFocusTime),
           1
         );
         setMaxFocusTime(maxTime);
       } else if (activeTab === "weekly") {
         const maxTime = Math.max(
-          ...leaderboardData.weekly.map((e) => e.weeklyScore),
+          ...leaderboardData.weekly.map((e: LeaderboardEntry) => e.weeklyScore),
           1
         );
+        console.log("Setting max weekly focus time:", maxTime);
         setMaxFocusTime(maxTime);
       } else {
         const maxTime = Math.max(
-          ...leaderboardData.monthly.map((e) => e.monthlyScore),
+          ...leaderboardData.daily.map((e: LeaderboardEntry) => e.dailyScore),
           1
         );
+        console.log("Setting max daily focus time:", maxTime);
         setMaxFocusTime(maxTime);
       }
     }
@@ -218,13 +248,13 @@ const LeaderboardPage: React.FC = () => {
 
   // Determine if current user is in the visible leaderboard
   const isUserVisible =
-    user && activeLeaderboard.some((entry) => entry.user._id === user.id);
+    user && activeLeaderboard.some((entry: LeaderboardEntry) => entry.user._id === user.id);
 
   // Get the value to display based on active tab
   const getDisplayValue = (entry: LeaderboardEntry) => {
     if (activeTab === "allTime") return entry.totalFocusTime;
     if (activeTab === "weekly") return entry.weeklyScore;
-    return entry.monthlyScore;
+    return entry.dailyScore;
   };
 
   return (
@@ -255,11 +285,11 @@ const LeaderboardPage: React.FC = () => {
         </button>
         <button
           className={`${styles.tabButton} ${
-            activeTab === "monthly" ? styles.active : ""
+            activeTab === "daily" ? styles.active : ""
           }`}
-          onClick={() => setActiveTab("monthly")}
+          onClick={() => setActiveTab("daily")}
         >
-          This Month
+          Today
         </button>
       </div>
 
@@ -290,10 +320,6 @@ const LeaderboardPage: React.FC = () => {
                   <SessionIcon />
                   <div className={styles.statLabel}>Sessions</div>
                 </div>
-                <div className={styles.statsColumn}>
-                  <TaskIcon />
-                  <div className={styles.statLabel}>Tasks</div>
-                </div>
               </div>
 
               {activeLeaderboard.length === 0 ? (
@@ -305,7 +331,7 @@ const LeaderboardPage: React.FC = () => {
                   </p>
                 </div>
               ) : (
-                activeLeaderboard.map((entry) => {
+                activeLeaderboard.map((entry: LeaderboardEntry) => {
                   const focusTimeValue = getDisplayValue(entry);
                   const progressPercent = (focusTimeValue / maxFocusTime) * 100;
 
@@ -361,12 +387,6 @@ const LeaderboardPage: React.FC = () => {
                           {entry.completedSessions}
                         </div>
                       </div>
-
-                      <div className={styles.statsColumn}>
-                        <div className={styles.statValue}>
-                          {entry.completedTasks}
-                        </div>
-                      </div>
                     </div>
                   );
                 })
@@ -399,7 +419,7 @@ const LeaderboardPage: React.FC = () => {
                         ? userRanking.totalFocusTime
                         : activeTab === "weekly"
                         ? userRanking.weeklyScore
-                        : userRanking.monthlyScore
+                        : userRanking.dailyScore
                     )}
                   </div>
                   <div className={styles.progressBar}>
@@ -417,12 +437,6 @@ const LeaderboardPage: React.FC = () => {
                 <div className={styles.statsColumn}>
                   <div className={styles.statValue}>
                     {userRanking.completedSessions}
-                  </div>
-                </div>
-
-                <div className={styles.statsColumn}>
-                  <div className={styles.statValue}>
-                    {userRanking.completedTasks}
                   </div>
                 </div>
               </div>

@@ -1,22 +1,26 @@
 import api from "./api";
-import { LeaderboardData, LeaderboardEntry } from "../types/types";
 
+/**
+ * Service for interacting with the leaderboard API endpoints
+ */
 const LeaderboardService = {
-  // Get global leaderboard with optional period filter
-  getLeaderboard: (period?: string, limit?: number) => {
-    return api.get("/leaderboard", {
-      params: {
-        period: period || "all",
-        limit: limit || 10,
-      },
-    });
+  /**
+   * Get global leaderboard with optional period filter
+   * @param period - Timeframe for leaderboard data: "all", "weekly", or "daily"
+   * @param limit - Maximum number of entries to return
+   * @returns Promise with leaderboard data
+   */
+  getLeaderboard: (period = "all", limit = 10) => {
+    return api.get(`/leaderboard?period=${period}&limit=${limit}`);
   },
 
-  // Get current user's ranking
-  getUserRanking: (period?: string) => {
-    return api.get("/leaderboard/me", {
-      params: { period: period || "all" },
-    });
+  /**
+   * Get current user's ranking on the leaderboard
+   * @param period - Timeframe for ranking data: "all", "weekly", or "daily"
+   * @returns Promise with user ranking data
+   */
+  getUserRanking: (period = "all") => {
+    return api.get(`/leaderboard/me?period=${period}`);
   },
 };
 

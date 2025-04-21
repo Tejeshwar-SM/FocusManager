@@ -1,51 +1,79 @@
 import mongoose, { Document, Schema } from "mongoose";
-// import { createDeflate } from "zlib";
-//session status of the timer
+
 export enum SessionStatus {
-  IN_PROGRESS = "inProgress",
+  PENDING = "pending",
+  IN_PROGRESS = "in_progress",
   COMPLETED = "completed",
-  CANCELLED = "cancelled",
+  CANCELLED = "cancelled"
 }
 
 export enum SessionType {
   FOCUS = "focus",
-  SHORT_BREAK = "short",
-  LONG_BREAK = "long",
+  SHORT_BREAK = "short_break",
+  LONG_BREAK = "long_break"
 }
 
 export interface IPomodoroSession extends Document {
-  user: mongoose.Types.ObjectId;
-  startTime: Date;
-  endTime?: Date;
+  userId: mongoose.Types.ObjectId;
+  type: string;
   duration: number;
   status: SessionStatus;
-  type: SessionType;
   taskId?: mongoose.Types.ObjectId;
-  completedCycles: number;
+  startTime?: Date;
+  endTime?: Date;
+  completedCycles?: number; // Added this field
   createdAt: Date;
   updatedAt: Date;
 }
 
-//pomodoro session schema
-const PomodoroSessionSchema = new Schema<IPomodoroSession>(
+const PomodoroSessionSchema = new Schema(
   {
-    user: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    startTime: { type: Date, required: true },
-    endTime: { type: Date },
-    duration: { type: Number, required: true },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    type: {
+      type: String,
+      enum: Object.values(SessionType),
+      required: true,
+    },
+    duration: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
     status: {
       type: String,
       enum: Object.values(SessionStatus),
-      default: SessionStatus.IN_PROGRESS,
+      default: SessionStatus.PENDING,
     },
-    type: { type: String, enum: Object.values(SessionType), required: true },
-    taskId: { type: Schema.Types.ObjectId, ref: "Task", required: false },
-    completedCycles: { type: Number, default: 0 },
+    taskId: {
+      type: Schema.Types.ObjectId,
+      ref: "Task",
+    },
+    startTime: {
+      type: Date,
+    },
+    endTime: {
+      type: Date,
+    },
+    completedCycles: {
+      type: Number,
+      default: 0,
+    },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-PomodoroSessionSchema.index({ user: 1, createdAt: -1 });
+// Add indexes for more efficient date-based queries
+PomodoroSessionSchema.index({ userId: 1, status: 1 }); // Common query pattern
+PomodoroSessionSchema.index({ startTime: 1 }); // For weekly/daily filters
+PomodoroSessionSchema.index({ createdAt: 1 }); // For fallback date queries
+PomodoroSessionSchema.index({ userId: 1, startTime: 1 }); // Combined index for user sessions by date
+PomodoroSessionSchema.index({ userId: 1, createdAt: 1 }); // Combined index for user sessions by creation date
 
 export default mongoose.model<IPomodoroSession>(
   "PomodoroSession",

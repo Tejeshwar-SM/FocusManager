@@ -23,10 +23,10 @@ export interface Task {
   type: CalendarEntryType;
   priority: TaskPriority;
   status: TaskStatus;
-  start: Date;           // Required field from backend
-  end?: Date;            // Optional end time
-  allDay?: boolean;      // Indicates if it's an all-day entry
-  dueDate?: string;      // Legacy field - using start instead now
+  start: Date; // Required field from backend
+  end?: Date; // Optional end time
+  allDay?: boolean; // Indicates if it's an all-day entry
+  dueDate?: string; // Legacy field - using start instead now
   estimatedTime?: number;
   remainingTime?: number;
   createdAt: string;
@@ -39,9 +39,9 @@ export interface TaskSubmission {
   description: string;
   priority: TaskPriority;
   type: CalendarEntryType;
-  start: Date | string;  // Required field for backend
-  end?: Date | string;   // Optional end time
-  allDay?: boolean;      // Default is false
+  start: Date | string; // Required field for backend
+  end?: Date | string; // Optional end time
+  allDay?: boolean; // Default is false
   status?: TaskStatus;
   estimatedTime?: number;
 }
@@ -84,7 +84,7 @@ export interface LeaderboardEntry {
   completedSessions: number;
   completedTasks: number;
   weeklyScore: number;
-  monthlyScore: number;
+  dailyScore: number;
   rank: number;
   lastUpdated: string;
 }
@@ -92,7 +92,7 @@ export interface LeaderboardEntry {
 export interface LeaderboardData {
   allTime: LeaderboardEntry[];
   weekly: LeaderboardEntry[];
-  monthly: LeaderboardEntry[];
+  daily: LeaderboardEntry[];
 }
 
 export interface JournalEntry {

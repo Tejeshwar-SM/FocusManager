@@ -107,13 +107,13 @@
 }
 
 .rankColumn {
-  flex: 0 0 70px;
+  flex: 0 0 80px;
   font-weight: 600;
   text-align: center;
 }
 
 .userColumn {
-  flex: 1;
+  flex: 1.5;
   font-weight: 500;
   display: flex;
   align-items: center;
@@ -144,7 +144,7 @@
 }
 
 .statsColumn {
-  flex: 0 0 120px;
+  flex: 1;
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -333,7 +333,7 @@
   }
   
   .statsColumn {
-    flex: 1 0 33%;
+    flex: 1 0 calc(50% - 20px);
     padding-left: 40px;
     text-align: left;
     align-items: flex-start;
