@@ -11,6 +11,25 @@ const Home: React.FC = () => {
 
   // For animated counting
   const [statsVisible, setStatsVisible] = useState(false);
+  const [animatedStats, setAnimatedStats] = useState({
+    productivity: 0,
+    sessions: 0,
+    satisfaction: 0,
+    tasks: 0
+  });
+
+  // Define final stat values
+  const finalStats = {
+    productivity: 37,
+    sessions: 1.5,
+    satisfaction: 89,
+    tasks: 25
+  };
+
+  // Easing function for smoother animation
+  const easeInOutQuad = (t: number): number => {
+    return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+  };
 
   useEffect(() => {
     const checkApiStatus = async () => {
@@ -32,6 +51,11 @@ const Home: React.FC = () => {
           if (entry.isIntersecting) {
             if (entry.target.id === "stats-section") {
               setStatsVisible(true);
+              
+              // Begin stat counter animation when section becomes visible
+              if (!animatedStats.productivity) {
+                animateStats();
+              }
             }
             entry.target.classList.add("animate-in");
           }
@@ -61,7 +85,39 @@ const Home: React.FC = () => {
       if (testimonialInterval.current)
         clearInterval(testimonialInterval.current);
     };
-  }, []);
+  }, [animatedStats.productivity]);
+
+  // Function to animate stats counting up
+  const animateStats = () => {
+    // Animation duration in ms
+    const duration = 2000;
+    // Number of steps in the animation
+    const steps = 60;
+    // Calculate time between steps
+    const stepTime = duration / steps;
+    
+    let currentStep = 0;
+    
+    const timer = setInterval(() => {
+      currentStep += 1;
+      
+      // Calculate current value as a percentage of final value
+      const progress = easeInOutQuad(currentStep / steps);
+      
+      setAnimatedStats({
+        productivity: Math.round(progress * finalStats.productivity),
+        sessions: parseFloat((progress * finalStats.sessions).toFixed(1)),
+        satisfaction: Math.round(progress * finalStats.satisfaction),
+        tasks: Math.round(progress * finalStats.tasks)
+      });
+      
+      if (currentStep >= steps) {
+        // Ensure final values are exactly what we want
+        setAnimatedStats(finalStats);
+        clearInterval(timer);
+      }
+    }, stepTime);
+  };
 
   const scrollToFeatures = () => {
     featuresRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -372,7 +428,7 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Stats Section */}
+      {/* Stats Section - FIXED */}
       <section className="stats-section" id="stats-section">
         <div className="stats-content">
           <div className="section-header centered">
@@ -385,7 +441,7 @@ const Home: React.FC = () => {
             <div className="stat-card">
               <h3 className="stat-number">
                 <span className={statsVisible ? "animated-number" : ""}>
-                  37
+                  {statsVisible ? animatedStats.productivity : "0"}
                 </span>
                 %
               </h3>
@@ -394,7 +450,7 @@ const Home: React.FC = () => {
             <div className="stat-card">
               <h3 className="stat-number">
                 <span className={statsVisible ? "animated-number" : ""}>
-                  1.5
+                  {statsVisible ? animatedStats.sessions : "0"}
                 </span>
                 M+
               </h3>
@@ -403,7 +459,7 @@ const Home: React.FC = () => {
             <div className="stat-card">
               <h3 className="stat-number">
                 <span className={statsVisible ? "animated-number" : ""}>
-                  89
+                  {statsVisible ? animatedStats.satisfaction : "0"}
                 </span>
                 %
               </h3>
@@ -412,7 +468,7 @@ const Home: React.FC = () => {
             <div className="stat-card">
               <h3 className="stat-number">
                 <span className={statsVisible ? "animated-number" : ""}>
-                  25
+                  {statsVisible ? animatedStats.tasks : "0"}
                 </span>
                 M+
               </h3>
@@ -420,7 +476,7 @@ const Home: React.FC = () => {
             </div>
           </div>
         </div>
-      </section>
+      </section> 
 
       {/* How It Works Section */}
       <section className="how-it-works-section" id="how-it-works">

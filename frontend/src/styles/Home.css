@@ -636,7 +636,7 @@ section {
 }
 
 .animated-number {
-  animation: countUp 2s ease-out forwards;
+  /* animation: countUp 2s ease-out forwards; */
   display: inline-block;
 }
 
