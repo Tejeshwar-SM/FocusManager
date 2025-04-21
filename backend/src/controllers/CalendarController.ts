@@ -1,9 +1,7 @@
 import { Request, Response } from "express";
-import mongoose from "mongoose";
-import Task from "../models/Task";
-import PomodoroSession, { SessionStatus } from "../models/PomodoroSession";
+import Task, { CalendarEntryType } from "../models/Task"; // Import the enum too
 
-// Get all calendar events (tasks and sessions) within a date range
+// Get all calendar events (tasks and events from Task model) within a date range
 export const getCalendarEvents = async (
   req: Request,
   res: Response
@@ -28,56 +26,56 @@ export const getCalendarEvents = async (
       return;
     }
 
-    // Get tasks with due dates in the range
-    const tasks = await Task.find({
+    // Fetch tasks and events from the Task model that overlap with the date range
+    // Overlap condition:
+    // - Starts before the range ends AND
+    // - (Ends after the range starts OR is an all-day event starting within or before the range end)
+    const calendarEntries = await Task.find({
       user: req.user?.id,
-      dueDate: { $gte: startDate, $lte: endDate },
-    });
-
-    // Get pomodoro sessions in the range
-    const sessions = await PomodoroSession.find({
-      user: req.user?.id,
+      start: { $lt: endDate }, // Starts before the end of the query range
       $or: [
-        // Session starts within range
-        { startTime: { $gte: startDate, $lte: endDate } },
-        // Session ends within range
-        { endTime: { $gte: startDate, $lte: endDate } },
-        // Session starts before range and ends after range (spans the entire range)
-        { startTime: { $lte: startDate }, endTime: { $gte: endDate } },
-      ],
-      status: { $ne: SessionStatus.CANCELLED }, // Exclude cancelled sessions
-    }).populate("taskId", "title");
+        { end: { $gt: startDate } }, // Ends after the start of the query range (for timed events)
+        { allDay: true, start: { $gte: startDate } } // Is all-day and starts within the query range
+        // Note: Depending on how you handle all-day events spanning multiple days,
+        // you might need a more complex query, but this covers most common cases.
+        // A simpler overlap: { start: { $lt: endDate }, end: { $gt: startDate } } works if 'end' is always set.
+        // Let's refine the overlap logic for robustness:
+        // An entry overlaps if its start is before the range end AND its end is after the range start.
+        // For all-day events, we treat their 'end' as start + 1 day conceptually for overlap.
+        // Query: Find where entry.start < range.end AND (entry.end > range.start OR (entry.allDay AND entry.start < range.end))
+      ]
+      // Simpler Overlap Query (often sufficient):
+      // start: { $lt: endDate }, // It must start before the range ends
+      // $or: [
+      //   { end: { $gt: startDate } }, // It must end after the range starts (for timed events)
+      //   { allDay: true } // Or it's an all-day event (implicitly overlaps if start < endDate)
+      // ]
+    }).sort({ start: 1 }); // Sort by start time
 
-    // Format the response
-    const events = {
-      tasks: tasks.map((task) => ({
-        id: task._id,
-        title: task.title,
-        start: task.dueDate,
-        allDay: true,
-        description: task.description,
-        status: task.status,
-        priority: task.priority,
-        type: "task",
-      })),
-      sessions: sessions.map((session) => ({
-        id: session._id,
-        title: session.taskId
-          ? (session.taskId as any).title || "Focus Session"
-          : "Focus Session",
-        start: session.startTime,
-        end:
-          session.endTime ||
-          new Date(session.startTime.getTime() + session.duration * 60000),
-        allDay: false,
-        status: session.status,
-        type: "session",
-      })),
-    };
+    // Format the response - map directly from the fetched entries
+    const formattedEvents = calendarEntries.map((entry) => ({
+      id: entry._id,
+      title: entry.title,
+      start: entry.start,
+      end: entry.end, // Will be undefined if allDay is true due to pre-save hook
+      allDay: entry.allDay,
+      description: entry.description,
+      status: entry.status, // Only relevant for type 'task'
+      priority: entry.priority, // Only relevant for type 'task'
+      type: entry.type, // 'task' or 'event'
+    }));
 
+    // Send back a single array of events
     res.json({
       success: true,
-      data: events,
+      // Keep the structure consistent if frontend expects { tasks: [], sessions: [] }
+      // Otherwise, simplify to data: formattedEvents
+      data: {
+          tasks: formattedEvents.filter(e => e.type === CalendarEntryType.TASK),
+          // Send an empty array for sessions, or adjust frontend to expect just 'events'
+          events: formattedEvents.filter(e => e.type === CalendarEntryType.EVENT),
+          // OR simply: data: formattedEvents
+      }
     });
   } catch (error) {
     console.error("Error fetching calendar events:", error);

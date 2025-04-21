@@ -13,6 +13,7 @@
   -webkit-backdrop-filter: blur(4px);
   animation: backdropFadeIn 0.2s ease forwards;
   padding: var(--spacing-4);
+  overscroll-behavior: contain;
 }
 
 @keyframes backdropFadeIn {
@@ -25,16 +26,19 @@
   border-radius: var(--border-radius-xl);
   width: 90%;
   max-width: 550px;
-  max-height: calc(100vh - 40px);
-  overflow-y: auto;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  /* Fix scrolling issue by changing to flex layout */
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
   animation: modalSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   position: relative;
   border: 1px solid var(--color-border);
+  overflow: hidden; /* Hide overflow on the container itself */
 }
 
 @keyframes modalSlideIn {
-  from { opacity: 0; transform: translateY(-30px) scale(0.95); }
+  from { opacity: 0; transform: translateY(-30px) scale(0.96); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
@@ -45,6 +49,7 @@
   padding: var(--spacing-5) var(--spacing-6);
   border-bottom: 1px solid var(--color-border);
   position: relative;
+  flex-shrink: 0; /* Prevent header from shrinking */
 }
 
 .modalHeader::before {
@@ -102,6 +107,7 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-2);
+  flex-shrink: 0; /* Don't shrink error message */
 }
 
 .modalError::before {
@@ -109,8 +115,28 @@
   font-size: 1.2rem;
 }
 
-.eventModal form {
+/* Create a scrollable form container */
+.scrollableContent {
+  flex: 1;
+  overflow-y: auto; /* Only allow scrolling in this section */
   padding: var(--spacing-6);
+  /* Add smooth scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-text-tertiary) transparent;
+}
+
+/* Style scrollbars for WebKit browsers */
+.scrollableContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollableContent::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollableContent::-webkit-scrollbar-thumb {
+  background-color: var(--color-text-tertiary);
+  border-radius: 20px;
 }
 
 .formGroup {
@@ -127,6 +153,7 @@
 
 .formGroup input[type="text"],
 .formGroup input[type="datetime-local"],
+.formGroup input[type="date"],
 .formGroup select,
 .formGroup textarea {
   width: 100%;
@@ -200,9 +227,11 @@
   display: flex;
   justify-content: flex-end;
   gap: var(--spacing-3);
-  margin-top: var(--spacing-8);
-  padding-top: var(--spacing-5);
+  margin-top: var(--spacing-6);
+  padding: var(--spacing-5) var(--spacing-6);
   border-top: 1px solid var(--color-border);
+  flex-shrink: 0; /* Don't shrink action buttons */
+  background-color: var(--color-surface);
 }
 
 .btn {
@@ -230,13 +259,14 @@
 }
 
 .primaryBtn {
-  background-color: var(--color-primary);
+  background-image: linear-gradient(to right, var(--color-primary), var(--color-primary-dark));
   color: white;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .primaryBtn:hover {
-  background-color: var(--color-primary-dark);
+  background-image: linear-gradient(to right, var(--color-primary-dark), var(--color-primary-dark));
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .secondaryBtn {
@@ -262,7 +292,7 @@
 .darkTheme .eventModal {
   background-color: var(--color-surface);
   color: var(--color-text);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
 }
 
 .darkTheme .modalHeader {
@@ -286,12 +316,46 @@
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-/* Add RGB color variables to App.css */
-:root {
-  --color-primary-rgb: 79, 70, 229;
-  --color-danger-rgb: 239, 68, 68;
+.dangerBtn {
+  background-image: linear-gradient(to right, var(--color-danger), #f05252);
+  color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-right: auto; /* Push to the left */
 }
 
+.dangerBtn:hover {
+  background-image: linear-gradient(to right, #f05252, #e02424);
+}
+
+.dangerBtn:focus {
+  box-shadow: 0 0 0 3px rgba(var(--color-danger-rgb), 0.4);
+}
+
+.deleteConfirmation {
+  padding: var(--spacing-6);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.deleteWarning {
+  color: var(--color-danger);
+  font-weight: 500;
+  margin: var(--spacing-4) 0;
+  font-size: 1.1rem;
+}
+
+.deleteActions {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-4);
+  margin-top: var(--spacing-6);
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .modalBackdrop {
     padding: var(--spacing-2);
@@ -299,7 +363,7 @@
   
   .eventModal {
     width: 100%;
-    max-height: 90vh;
+    max-height: 95vh;
   }
   
   .formRow {
@@ -311,11 +375,12 @@
     padding: var(--spacing-4) var(--spacing-5);
   }
   
-  .eventModal form {
-    padding: var(--spacing-5);
+  .scrollableContent {
+    padding: var(--spacing-4);
   }
   
   .formActions {
+    padding: var(--spacing-4) var(--spacing-5);
     flex-direction: column-reverse;
     gap: var(--spacing-3);
   }
@@ -324,46 +389,4 @@
     width: 100%;
     padding: var(--spacing-3);
   }
-}
-
-.dangerBtn {
-  background-color: var(--color-danger);
-  color: white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  margin-right: auto; /* Push to the left */
-}
-
-.dangerBtn:hover {
-  background-color: var(--color-danger-dark);
-}
-
-.dangerBtn:focus {
-  box-shadow: 0 0 0 3px rgba(var(--color-danger-rgb), 0.4);
-}
-
-.deleteConfirmation {
-  padding: var(--spacing-6);
-  text-align: center;
-}
-
-.deleteWarning {
-  color: var(--color-danger);
-  font-weight: 500;
-  margin: var(--spacing-4) 0;
-}
-
-.deleteActions {
-  display: flex;
-  justify-content: center;
-  gap: var(--spacing-4);
-  margin-top: var(--spacing-6);
-}
-
-.formActions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-3);
-  margin-top: var(--spacing-8);
-  padding-top: var(--spacing-5);
-  border-top: 1px solid var(--color-border);
 }

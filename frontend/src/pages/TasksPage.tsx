@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import TaskService from "../services/TaskService";
-import { TaskPriority, TaskStatus, Task } from "../types/types";
+import { TaskPriority, TaskStatus, Task, CalendarEntryType, TaskSubmission } from "../types/types";
 import styles from "../styles/Tasks.module.css";
 
 // Helper function to combine class names
@@ -14,18 +14,8 @@ interface TaskForm {
   title: string;
   description: string;
   priority: TaskPriority;
-  dueDate: string;
+  dueDate: string;  // Form still uses dueDate for simplicity
   estimatedTime: string; // Keep as string for the form input
-}
-
-// Define interface for API submission
-interface TaskSubmission {
-  title: string;
-  description: string;
-  priority: TaskPriority;
-  status?: TaskStatus;
-  dueDate?: string;
-  estimatedTime?: number; // Optional number for API
 }
 
 const TasksPage: React.FC = () => {
@@ -103,17 +93,15 @@ const TasksPage: React.FC = () => {
     try {
       setError("");
 
-      // Create a properly typed submission object
+      // Create a properly typed submission object with required fields
       const taskToSubmit: TaskSubmission = {
         title: newTask.title,
         description: newTask.description,
         priority: newTask.priority,
+        type: CalendarEntryType.TASK,
+        start: newTask.dueDate ? new Date(newTask.dueDate) : new Date(), // Use dueDate as start or default to now
+        allDay: true // Default to all-day tasks when created from TasksPage
       };
-
-      // Only add dueDate if it's not empty
-      if (newTask.dueDate) {
-        taskToSubmit.dueDate = newTask.dueDate;
-      }
 
       // Only add estimatedTime if it's not empty
       if (newTask.estimatedTime) {
@@ -146,7 +134,11 @@ const TasksPage: React.FC = () => {
   const startEditingTask = (task: Task) => {
     // Format date for HTML date input (YYYY-MM-DD)
     let formattedDate = "";
-    if (task.dueDate) {
+    if (task.start) {
+      const date = new Date(task.start);
+      formattedDate = date.toISOString().split("T")[0];
+    } else if (task.dueDate) {
+      // Legacy support for dueDate field
       const date = new Date(task.dueDate);
       formattedDate = date.toISOString().split("T")[0];
     }
@@ -154,7 +146,8 @@ const TasksPage: React.FC = () => {
     setEditFormData({
       title: task.title,
       description: task.description || "",
-      priority: task.priority,
+      // Ensure priority is always defined, fallback to MEDIUM if undefined
+      priority: task.priority || TaskPriority.MEDIUM,
       dueDate: formattedDate,
       estimatedTime: task.estimatedTime?.toString() || "",
     });
@@ -185,17 +178,15 @@ const TasksPage: React.FC = () => {
     try {
       setError("");
 
-      // Create update payload
+      // Create update payload with required fields
       const taskToUpdate: TaskSubmission = {
         title: editFormData.title,
         description: editFormData.description,
         priority: editFormData.priority,
+        type: CalendarEntryType.TASK,
+        start: editFormData.dueDate ? new Date(editFormData.dueDate) : new Date(), // Use dueDate as start or default to now
+        allDay: true // Default to all-day tasks when edited from TasksPage
       };
-
-      // Only include dueDate if provided
-      if (editFormData.dueDate) {
-        taskToUpdate.dueDate = editFormData.dueDate;
-      }
 
       // Only include estimatedTime if provided
       if (editFormData.estimatedTime) {
@@ -209,10 +200,22 @@ const TasksPage: React.FC = () => {
       await fetchTasks();
     } catch (error: any) {
       console.error("Error updating task:", error);
-      setError(
-        error.response?.data?.message ||
-          "Failed to update task. Please try again."
-      );
+      let errorMessage = "Failed to update task. Please try again.";
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      // Add validation error details if available
+      if (error.response?.data?.errors) {
+        const errors = error.response.data.errors;
+        const errorDetails = Object.keys(errors)
+          .map(field => `${field}: ${errors[field].message}`)
+          .join('; ');
+        errorMessage += ` Validation errors: ${errorDetails}`;
+      }
+      
+      setError(errorMessage);
     }
   };
 
@@ -223,10 +226,13 @@ const TasksPage: React.FC = () => {
       await fetchTasks();
     } catch (error: any) {
       console.error("Error completing task:", error);
-      setError(
-        error.response?.data?.message ||
-          "Failed to update task. Please try again."
-      );
+      let errorMessage = "Failed to complete task. Please try again.";
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.status === 400) {
+        errorMessage = "Invalid task data. The server rejected the request.";
+      }
+      setError(errorMessage);
     }
   };
 
@@ -295,6 +301,11 @@ const TasksPage: React.FC = () => {
     return `${mins}m remaining`;
   };
 
+  // Function to format date for display
+  const formatDate = (date: Date | string) => {
+    return new Date(date).toLocaleDateString();
+  };
+
   // Render the edit form for a task
   const renderEditForm = () => {
     return (
@@ -341,13 +352,14 @@ const TasksPage: React.FC = () => {
               </select>
             </div>
             <div className={styles.formGroup}>
-              <label htmlFor="edit-dueDate">Due Date (Optional)</label>
+              <label htmlFor="edit-dueDate">Due Date</label>
               <input
                 type="date"
                 id="edit-dueDate"
                 name="dueDate"
                 value={editFormData.dueDate}
                 onChange={handleEditInputChange}
+                required
               />
             </div>
           </div>
@@ -456,7 +468,7 @@ const TasksPage: React.FC = () => {
                 </select>
               </div>
               <div className={styles.formGroup}>
-                <label htmlFor="dueDate">Due Date (Optional)</label>
+                <label htmlFor="dueDate">Due Date</label>
                 <input
                   type="date"
                   id="dueDate"
@@ -464,6 +476,7 @@ const TasksPage: React.FC = () => {
                   value={newTask.dueDate}
                   onChange={handleInputChange}
                   min={new Date().toISOString().split("T")[0]}
+                  required
                 />
               </div>
             </div>
@@ -560,20 +573,28 @@ const TasksPage: React.FC = () => {
                     {task.description && <p>{task.description}</p>}
 
                     <div className={styles.taskMeta}>
-                      <span
-                        className={classNames(
-                          styles.priority,
-                          styles[task.priority]
-                        )}
-                      >
-                        {task.priority.charAt(0).toUpperCase() +
-                          task.priority.slice(1)}{" "}
-                        Priority
-                      </span>
+                      {/* FIX: Add null check for task.priority */}
+                      {task.priority ? (
+                        <span
+                          className={classNames(
+                            styles.priority,
+                            styles[task.priority]
+                          )}
+                        >
+                          {task.priority.charAt(0).toUpperCase() +
+                            task.priority.slice(1)}{" "}
+                          Priority
+                        </span>
+                      ) : (
+                        <span className={styles.priority}>
+                          Medium Priority {/* Default display when priority is missing */}
+                        </span>
+                      )}
 
-                      {task.dueDate && (
+                      {/* Use start date for displaying due date */}
+                      {task.start && (
                         <span className={styles.dueDate}>
-                          Due: {new Date(task.dueDate).toLocaleDateString()}
+                          Due: {formatDate(task.start)}
                         </span>
                       )}
 

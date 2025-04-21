@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import TaskService from "../services/TaskService";
 import PomodoroService from "../services/PomodoroService";
 import styles from "../styles/Dashboard.module.css";
-import { Task } from "../types/types";
+import { Task, TaskPriority } from "../types/types";
 
 // Define an interface for the stats state for better type safety
 interface DashboardStats {
@@ -151,6 +151,17 @@ const Dashboard: React.FC = () => {
     return classes.filter(Boolean).join(" ");
   };
 
+  // Format task status - fix for the charAt error
+  const formatTaskStatus = (status: string | undefined): string => {
+    if (!status) return "Status Unknown";
+    
+    if (status === "inProgress") return "In Progress";
+    if (status === "todo") return "To Do";
+    
+    // Only use charAt if status exists
+    return status.charAt(0).toUpperCase() + status.slice(1);
+  };
+
   return (
     <div className={styles.dashboardContainer}>
       <header className={styles.dashboardHeader}>
@@ -184,16 +195,6 @@ const Dashboard: React.FC = () => {
           <p>⚠️ Error loading dashboard: {error}</p>
         </div>
       )}
-
-      {/* Debug info - temporarily add this for troubleshooting */}
-      {/* {debugInfo && (
-        <div style={{ margin: '10px', padding: '10px', border: '1px solid #ccc', fontSize: '12px', backgroundColor: '#f5f5f5' }}>
-          <details>
-            <summary>Debug Information (Click to expand)</summary>
-            <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
-          </details>
-        </div>
-      )} */}
 
       {/* Success state */}
       {!loading && !error && (
@@ -287,44 +288,46 @@ const Dashboard: React.FC = () => {
                     key={task._id}
                     className={classNames(
                       styles.taskCard,
-                      styles[`${task.priority}Priority`],
-                      styles[`${task.status}Status`]
+                      styles[`${task.priority || 'medium'}Priority`],
+                      styles[`${task.status || 'todo'}Status`]
                     )}
                   >
                     <div className={styles.taskHeader}>
                       <h3>{task.title}</h3>
                       <div className={styles.taskBadges}>
+                        {/* Add null check for task.priority */}
                         <span
                           className={classNames(
                             styles.priorityBadge,
-                            styles[task.priority]
+                            styles[task.priority || 'medium']
                           )}
                         >
-                          {task.priority}
+                          {task.priority ? task.priority : 'medium'}
                         </span>
+                        
+                        {/* Use formatTaskStatus helper function for safe access */}
                         <span
                           className={classNames(
                             styles.statusBadge,
-                            styles[task.status]
+                            styles[task.status || 'todo']
                           )}
                         >
-                          {task.status === "inProgress"
-                            ? "In Progress"
-                            : task.status === "todo"
-                            ? "To Do"
-                            : task.status.charAt(0).toUpperCase() +
-                              task.status.slice(1)}
+                          {formatTaskStatus(task.status)}
                         </span>
                       </div>
                     </div>
                     <p className={styles.taskDescription}>
                       {task.description || "No description."}
                     </p>
-                    {task.dueDate && (
+                    {task.start ? (
+                      <p className={styles.taskDueDate}>
+                        Due: {new Date(task.start).toLocaleDateString()}
+                      </p>
+                    ) : task.dueDate ? (
                       <p className={styles.taskDueDate}>
                         Due: {new Date(task.dueDate).toLocaleDateString()}
                       </p>
-                    )}
+                    ) : null}
                   </div>
                 ))
               ) : (

@@ -1,7 +1,7 @@
 .calendarContainer {
   background-color: var(--color-surface);
   border-radius: var(--border-radius-xl);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
   padding: var(--spacing-6);
   margin-bottom: var(--spacing-8);
   border: 1px solid var(--color-border);
@@ -17,8 +17,9 @@
   top: 0;
   left: 0;
   width: 100%;
-  height: 6px;
+  height: 4px;
   background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  z-index: 1;
 }
 
 /* FullCalendar overrides */
@@ -28,6 +29,9 @@
   --fc-page-bg-color: var(--color-surface);
   --fc-neutral-bg-color: var(--color-surface-hover);
   --fc-event-selected-overlay-color: rgba(var(--color-primary-rgb), 0.25);
+  --fc-today-bg-color: rgba(var(--color-primary-rgb), 0.05);
+  --fc-highlight-color: rgba(var(--color-primary-rgb), 0.1);
+  --fc-non-business-color: rgba(var(--color-text-tertiary-rgb), 0.04);
 }
 
 .calendarContainer :global(.fc .fc-toolbar) {
@@ -51,8 +55,9 @@
   border-radius: var(--border-radius-md);
   padding: 0.5em 1em;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   border: none;
+  letter-spacing: 0.02em;
 }
 
 .calendarContainer :global(.fc .fc-button-primary) {
@@ -64,7 +69,7 @@
 .calendarContainer :global(.fc .fc-button-primary:not(:disabled):hover) {
   background-color: var(--color-primary-dark);
   transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
 }
 
 .calendarContainer :global(.fc .fc-button-primary:not(:disabled):active) {
@@ -82,17 +87,19 @@
 .calendarContainer :global(.fc .fc-event) {
   cursor: pointer;
   border-radius: var(--border-radius-md);
-  padding: 2px 4px;
+  padding: 3px 4px;
   border: none;
-  transition: all 0.2s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   font-size: 0.85rem;
   line-height: 1.4;
+  margin-bottom: 1px;
+  overflow: hidden;
 }
 
 .calendarContainer :global(.fc .fc-event:hover) {
-  transform: translateY(-1px);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px) scale(1.005);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
   z-index: 10;
 }
 
@@ -103,15 +110,19 @@
 .calendarContainer :global(.fc .fc-event-title) {
   font-weight: 500;
   white-space: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .calendarContainer :global(.fc .fc-event-time) {
   font-weight: 400;
   opacity: 0.9;
+  font-size: 0.85em;
 }
 
 /* Day/grid styling */
-.calendarContainer :global(.fc td), .calendarContainer :global(.fc th) {
+.calendarContainer :global(.fc td), 
+.calendarContainer :global(.fc th) {
   border-color: var(--color-border);
 }
 
@@ -134,22 +145,136 @@
 .calendarContainer :global(.fc .fc-daygrid-day-number) {
   padding: 8px;
   font-weight: 500;
+  text-decoration: none;
 }
 
 .calendarContainer :global(.fc .fc-col-header-cell-cushion) {
-  padding: 8px 4px;
+  padding: 10px 4px;
   font-weight: 600;
   color: var(--color-text);
+  text-decoration: none;
 }
 
-/* List view */
+/* Time grid specific styling */
+.calendarContainer :global(.fc-timegrid-event-harness-inset .fc-timegrid-event) {
+  box-shadow: 0 0 0 1px var(--color-surface);
+}
+
+.calendarContainer :global(.fc-timegrid-slot-minor) {
+  border-top-style: dotted;
+  border-top-color: rgba(var(--color-border-rgb), 0.5);
+}
+
+.calendarContainer :global(.fc .fc-timegrid-now-indicator-line) {
+  border-color: var(--color-danger);
+  border-width: 2px;
+}
+
+.calendarContainer :global(.fc .fc-timegrid-now-indicator-arrow) {
+  border-color: var(--color-danger);
+  border-width: 5px;
+}
+
+/* List view - enhanced styling */
 .calendarContainer :global(.fc-list-day-cushion) {
-  background-color: var(--color-surface-hover) !important;
+  background: linear-gradient(to right, var(--color-primary-light), rgba(var(--color-primary-rgb), 0.1)) !important;
+  padding: 12px 16px !important;
+  border-left: 3px solid var(--color-primary);
+  position: relative;
+}
+
+.calendarContainer :global(.fc-list-day-text),
+.calendarContainer :global(.fc-list-day-side-text) {
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--color-text);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* Enhance the list view's appearance */
+.calendarContainer :global(.fc-list-table th) {
+  background-color: var(--color-surface-hover);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.calendarContainer :global(.fc-list-event:hover td) {
+  background-color: rgba(var(--color-primary-rgb), 0.08);
+}
+
+.calendarContainer :global(.fc-list-event-dot) {
+  border-width: 5px;
+  border-radius: 3px;
+  margin: 0 8px 0 4px;
+}
+
+.calendarContainer :global(.fc-list-event-time) {
+  width: 120px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.calendarContainer :global(.fc-list-event-title) {
+  font-weight: 500;
+  padding-left: 8px;
+}
+
+.calendarContainer :global(.fc-list-empty) {
+  background-color: rgba(var(--color-surface-hover-rgb), 0.5);
+  padding: 40px 20px;
+  text-align: center;
+  font-style: italic;
+  color: var(--color-text-tertiary);
+}
+
+/* Dark theme overrides for list view */
+.calendarDark :global(.fc-list-day-cushion) {
+  background: linear-gradient(to right, rgba(var(--color-primary-rgb), 0.3), rgba(var(--color-primary-rgb), 0.1)) !important;
+  color: var(--color-text);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+}
+
+.calendarDark :global(.fc-list-event:hover td) {
+  background-color: rgba(var(--color-primary-rgb), 0.15);
+}
+
+.calendarDark :global(.fc-list-empty) {
+  background-color: rgba(0, 0, 0, 0.2);
+  color: var(--color-text-secondary);
+}
+
+/* Month view - more link */
+.calendarContainer :global(.fc-daygrid-more-link) {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+/* Animation for new events */
+.calendarContainer :global(.fc-event-new) {
+  animation: newEventPulse 1s ease-out;
+}
+
+@keyframes newEventPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--color-primary-rgb), 0.7);
+    transform: scale(0.95);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(var(--color-primary-rgb), 0);
+    transform: scale(1.02);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--color-primary-rgb), 0);
+    transform: scale(1);
+  }
 }
 
 /* Dark theme overrides */
 .calendarDark {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
 }
 
 .calendarDark :global(.fc-theme-standard .fc-scrollgrid),
@@ -159,17 +284,52 @@
 }
 
 .calendarDark :global(.fc .fc-col-header-cell-cushion),
-.calendarDark :global(.fc .fc-daygrid-day-number) {
+.calendarDark :global(.fc .fc-daygrid-day-number),
+.calendarDark :global(.fc-list-day-text),
+.calendarDark :global(.fc-list-day-side-text) {
   color: var(--color-text);
 }
 
 .calendarDark :global(.fc-day-today) {
-  background: linear-gradient(rgba(var(--color-primary-rgb), 0.05), rgba(var(--color-primary-rgb), 0.1)) !important;
+  background: linear-gradient(rgba(var(--color-primary-rgb), 0.07), rgba(var(--color-primary-rgb), 0.12)) !important;
 }
 
 .calendarDark :global(.fc-list-day-cushion) {
-  background-color: rgba(var(--color-primary-rgb), 0.1) !important;
+  background-color: rgba(var(--color-surface-hover-rgb), 0.7) !important;
   color: var(--color-text);
+}
+
+.calendarDark :global(.fc-theme-standard .fc-popover) {
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+.calendarDark :global(.fc-theme-standard .fc-popover-header) {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+/* Enhanced popover styling */
+.calendarContainer :global(.fc-theme-standard .fc-popover) {
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.calendarContainer :global(.fc-theme-standard .fc-popover-header) {
+  padding: 8px 10px;
+  font-weight: 600;
+}
+
+.calendarContainer :global(.fc-theme-standard .fc-popover-close) {
+  opacity: 0.7;
+  font-size: 1.2em;
+  line-height: 0.8;
+}
+
+.calendarContainer :global(.fc-theme-standard .fc-popover-body) {
+  padding: 6px 8px;
 }
 
 /* Responsive adjustments */
@@ -177,6 +337,7 @@
   .calendarContainer {
     padding: var(--spacing-3);
     min-height: 500px;
+    border-radius: var(--border-radius-lg);
   }
   
   .calendarContainer :global(.fc .fc-toolbar) {
@@ -194,10 +355,83 @@
   
   .calendarContainer :global(.fc-header-toolbar .fc-toolbar-chunk) {
     margin-bottom: var(--spacing-2);
+    width: 100%;
   }
   
   .calendarContainer :global(.fc .fc-button) {
     padding: 0.4em 0.8em;
     font-size: 0.9rem;
   }
+  
+  .calendarContainer :global(.fc-direction-ltr .fc-toolbar > * > :not(:first-child)) {
+    margin-left: 0.5em;
+  }
+  
+  .calendarContainer :global(.fc-event-title) {
+    font-size: 0.8rem;
+  }
+}
+
+/* Color styling for different event types */
+/* TASK COLORS BY PRIORITY */
+.calendarContainer :global(.fc-event.event-task.priority-high) {
+  background-color: var(--color-danger-light) !important;
+  border-left: 3px solid var(--color-danger) !important;
+}
+
+.calendarContainer :global(.fc-event.event-task.priority-medium) {
+  background-color: var(--color-warning-light) !important;
+  border-left: 3px solid var(--color-warning) !important;
+}
+
+.calendarContainer :global(.fc-event.event-task.priority-low) {
+  background-color: var(--color-success-light) !important;
+  border-left: 3px solid var(--color-success) !important;
+}
+
+/* Standard event styling */
+.calendarContainer :global(.fc-event.event-standard) {
+  background-color: var(--color-info-light) !important;
+  border-left: 3px solid var(--color-info) !important;
+}
+
+/* Make text color dark for better readability on light backgrounds */
+.calendarContainer :global(.fc-event.event-task .fc-event-main),
+.calendarContainer :global(.fc-event.event-standard .fc-event-main) {
+  color: var(--color-text) !important;
+}
+
+/* Variables needed for the calendar */
+:root {
+  --color-primary-rgb: 79, 70, 229;
+  --color-danger-rgb: 239, 68, 68;
+  --color-warning-rgb: 245, 158, 11;
+  --color-success-rgb: 16, 185, 129;
+  --color-info-rgb: 59, 130, 246;
+  --color-border-rgb: 229, 231, 235;
+  --color-text-tertiary-rgb: 156, 163, 175;
+  --color-surface-hover-rgb: 245, 246, 250;
+  
+  /* Background colors for events */
+  --color-danger-light: rgba(239, 68, 68, 0.15);
+  --color-warning-light: rgba(245, 158, 11, 0.15);
+  --color-success-light: rgba(16, 185, 129, 0.15);
+  --color-info-light: rgba(59, 130, 246, 0.15);
+}
+
+/* Dark mode adjustments for event colors */
+.calendarDark :global(.fc-event.event-task.priority-high) {
+  background-color: rgba(239, 68, 68, 0.25) !important;
+}
+
+.calendarDark :global(.fc-event.event-task.priority-medium) {
+  background-color: rgba(245, 158, 11, 0.25) !important;
+}
+
+.calendarDark :global(.fc-event.event-task.priority-low) {
+  background-color: rgba(16, 185, 129, 0.25) !important;
+}
+
+.calendarDark :global(.fc-event.event-standard) {
+  background-color: rgba(59, 130, 246, 0.25) !important;
 }

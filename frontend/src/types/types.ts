@@ -11,17 +11,39 @@ export enum TaskStatus {
   COMPLETED = "completed",
 }
 
+export enum CalendarEntryType {
+  TASK = "task",
+  EVENT = "event",
+}
+
 export interface Task {
   _id: string;
   title: string;
   description?: string;
+  type: CalendarEntryType;
   priority: TaskPriority;
   status: TaskStatus;
-  dueDate?: string;
-  estimatedTime?: number; // Added: estimated time in minutes
-  remainingTime?: number; // Added: remaining time in minutes
+  start: Date;           // Required field from backend
+  end?: Date;            // Optional end time
+  allDay?: boolean;      // Indicates if it's an all-day entry
+  dueDate?: string;      // Legacy field - using start instead now
+  estimatedTime?: number;
+  remainingTime?: number;
   createdAt: string;
   updatedAt: string;
+}
+
+// Updated to match backend requirements
+export interface TaskSubmission {
+  title: string;
+  description: string;
+  priority: TaskPriority;
+  type: CalendarEntryType;
+  start: Date | string;  // Required field for backend
+  end?: Date | string;   // Optional end time
+  allDay?: boolean;      // Default is false
+  status?: TaskStatus;
+  estimatedTime?: number;
 }
 
 // Types for Pomodoro-related data

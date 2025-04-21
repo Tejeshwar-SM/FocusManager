@@ -1,5 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
-import { debounce } from "lodash";
+import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -10,148 +9,175 @@ import {
   DateSelectArg,
   EventClickArg,
   DatesSetArg,
+  ViewApi,
+  MoreLinkArg,
 } from "@fullcalendar/core";
 import { useAuth } from "../../context/AuthContext";
-import EventModal from "./EventModal";
 import styles from "../../styles/calendar/Calendar.module.css";
+import { CalendarEntryType, TaskPriority } from "../../types/types";
 
+// Updated props interface to match what CalendarPage is passing
 interface CalendarProps {
   events: any[];
-  onEventCreate: (eventData: any) => Promise<void>;
-  onEventUpdate: (eventData: any) => Promise<void>;
-  onEventDelete: (eventData: any) => Promise<boolean>;
   onDateRangeChange: (start: Date, end: Date) => void;
+  onDateSelect: (date: Date) => void;
+  onEventClick: (eventInfo: any) => void;
 }
 
-const Calendar: React.FC<CalendarProps> = ({
+// Default view constant - use month view as default
+const DEFAULT_VIEW = "dayGridMonth";
+
+// Save current view to localStorage so it persists across sessions
+const saveCurrentView = (viewName: string) => {
+  try {
+    localStorage.setItem("calendarView", viewName);
+  } catch (e) {
+    console.error("Failed to save calendar view to localStorage");
+  }
+};
+
+// Get saved view from localStorage, default to dayGridMonth
+const getSavedView = (): string => {
+  try {
+    const savedView = localStorage.getItem("calendarView");
+    return savedView || DEFAULT_VIEW;
+  } catch (e) {
+    return DEFAULT_VIEW;
+  }
+};
+
+const Calendar = React.memo(function Calendar({
   events,
-  onEventCreate,
-  onEventUpdate,
-  onEventDelete,
   onDateRangeChange,
-}) => {
+  onDateSelect,
+  onEventClick
+}: CalendarProps) {
   const { theme } = useAuth();
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
-  const [isLoading, setIsLoading] = useState(false);
+  
+  // Track the current view
+  const [currentView, setCurrentView] = useState<string>(getSavedView());
+
   const calendarRef = useRef<FullCalendar>(null);
-
-  // Create a debounced version of the date range change handler
-  // We use useCallback to avoid recreating this function on every render
-  const handleDatesSet = useCallback(
-    debounce((dateInfo: DatesSetArg) => {
-      onDateRangeChange(dateInfo.start, dateInfo.end);
-    }, 3000), // 3000ms debounce time
-    [onDateRangeChange] // Recreate when onDateRangeChange changes
-  );
-
-  useEffect(() => {
-    if (events.length > 0) {
-      // After events load, ensure today is visible
-      const calendarApi = calendarRef.current?.getApi();
-      if (calendarApi) {
-        calendarApi.today();
-      }
-    }
-  }, [events]);
+  
+  // Track if this is initial render
+  const initialRenderRef = useRef(true);
+  
+  // Track date range for fetch optimization
+  const prevDatesRef = useRef<{ start: string | null; end: string | null }>({
+    start: null,
+    end: null,
+  });
 
   // Format events for FullCalendar
-  const formattedEvents: EventInput[] = events.map((event) => ({
-    id: event.id,
-    title: event.title,
-    start: new Date(event.start),
-    end: event.end ? new Date(event.end) : undefined,
-    allDay: event.allDay || false,
-    backgroundColor: getEventColor(event),
-    borderColor: getEventColor(event),
-    textColor: "#ffffff",
-    extendedProps: {
-      type: event.type,
-      description: event.description,
-      priority: event.priority,
-      status: event.status,
+  const formattedEvents: EventInput[] = useMemo(
+    () =>
+      events.map((event) => {
+        // Get appropriate classes based on event type and priority
+        const classes = [];
+        if (event.type === CalendarEntryType.TASK) {
+          classes.push("event-task");
+          if (event.priority) {
+            classes.push(`priority-${event.priority}`);
+          }
+        } else {
+          classes.push("event-standard");
+        }
+
+        return {
+          id: String(event.id || event._id),
+          title: event.title,
+          start: new Date(event.start),
+          end: event.end ? new Date(event.end) : undefined,
+          allDay: event.allDay || false,
+          className: classes.join(" "),
+          extendedProps: {
+            type: event.type === CalendarEntryType.TASK ? "task" : "event",
+            description: event.description,
+            priority: event.priority,
+            status: event.status,
+          },
+        };
+      }),
+    [events]
+  );
+
+  // Handler for view changes
+  const handleViewChange = useCallback((viewInfo: { view: ViewApi }) => {
+    const viewName = viewInfo.view.type;
+    // Only log and save if the view actually changed
+    if (viewName !== currentView) {
+      console.log(`Calendar: View changed to ${viewName}`);
+      setCurrentView(viewName);
+      saveCurrentView(viewName);
+    }
+  }, [currentView]);
+
+  // Handler for date range change
+  const handleDatesSet = useCallback(
+    (dateInfo: DatesSetArg) => {
+      if (initialRenderRef.current) {
+        initialRenderRef.current = false;
+        // Store initial date range
+        prevDatesRef.current = {
+          start: dateInfo.start.toISOString(),
+          end: dateInfo.end.toISOString(),
+        };
+        
+        // On initial render, always fetch data
+        onDateRangeChange(dateInfo.start, dateInfo.end);
+        return;
+      }
+
+      // Convert dates to strings for comparison
+      const startStr = dateInfo.start.toISOString();
+      const endStr = dateInfo.end.toISOString();
+
+      // Skip if the date range hasn't changed
+      if (
+        prevDatesRef.current.start === startStr &&
+        prevDatesRef.current.end === endStr
+      ) {
+        return;
+      }
+
+      // Update refs and trigger the fetch
+      prevDatesRef.current = { start: startStr, end: endStr };
+      onDateRangeChange(dateInfo.start, dateInfo.end);
     },
-  }));
+    [onDateRangeChange]
+  );
 
-  // Handle date selection for new event
-  const handleDateSelect = (selectInfo: DateSelectArg) => {
-    setSelectedDate(selectInfo.start);
-    setSelectedEvent(null);
-    setModalMode("create");
-    setModalOpen(true);
-  };
+  // Date selection handler - delegate to parent via prop
+  const handleDateSelect = useCallback((selectInfo: DateSelectArg) => {
+    // Call parent handler with the selected date
+    onDateSelect(selectInfo.start);
 
-  // Handle event click for editing
-  const handleEventClick = (clickInfo: EventClickArg) => {
-    const event = clickInfo.event;
-    setSelectedEvent({
-      id: event.id,
-      title: event.title,
-      start: event.start,
-      end: event.end,
-      allDay: event.allDay,
-      type: event.extendedProps?.type || "task",
-      description: event.extendedProps?.description || "",
-      priority: event.extendedProps?.priority || "medium",
-      status: event.extendedProps?.status,
-    });
-    setModalMode("edit");
-    setModalOpen(true);
-  };
+    // Clear selection in the calendar
+    const calendarApi = selectInfo.view.calendar;
+    calendarApi.unselect();
+  }, [onDateSelect]);
 
-  // Handle save from modal
-  const handleSave = async (eventData: any) => {
-    setIsLoading(true);
-    try {
-      if (modalMode === "create") {
-        await onEventCreate(eventData);
-      } else {
-        await onEventUpdate(eventData);
-      }
-      setModalOpen(false);
-    } catch (error) {
-      console.error("Error saving event:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Event click handler - delegate to parent via prop
+  const handleEventClick = useCallback((clickInfo: EventClickArg) => {
+    // Pass the event click info to parent
+    onEventClick(clickInfo);
+  }, [onEventClick]);
 
-  // Handle delete from modal
-  const handleDelete = async (eventData: any) => {
-    setIsLoading(true);
-    try {
-      const success = await onEventDelete(eventData);
-      if (success) {
-        setModalOpen(false);
-      }
-    } catch (error) {
-      console.error("Error deleting event:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Helper to determine event color based on type and priority
-  function getEventColor(event: any): string {
-    if (event.type === "task") {
-      // Color by task priority
-      switch (event.priority) {
-        case "high":
-          return "var(--color-danger)";
-        case "medium":
-          return "var(--color-warning)";
-        case "low":
-          return "var(--color-success)";
-        default:
-          return "var(--color-text-tertiary)";
-      }
-    } else {
-      // Pomodoro sessions
-      return "var(--color-info)";
-    }
-  }
+  // Handler for "more" link click
+  const handleMoreLinkClick = useCallback((info: MoreLinkArg) => {
+    // Get the calendar API
+    const calendarApi = info.view.calendar;
+    
+    // Change to day view for the clicked date
+    calendarApi.changeView('timeGridDay', info.date);
+    
+    // Save this view preference
+    setCurrentView('timeGridDay');
+    saveCurrentView('timeGridDay');
+    
+    // Return 'string' to tell FullCalendar we're handling this click
+    return 'day';
+  }, []);
 
   return (
     <div
@@ -160,13 +186,25 @@ const Calendar: React.FC<CalendarProps> = ({
       }`}
     >
       <FullCalendar
+        key={`calendar-${theme}`} // Only re-render on theme change
         ref={calendarRef}
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
-        initialView="dayGridMonth"
+        initialView={currentView} // Use the current view from state
         headerToolbar={{
           left: "prev,next today",
           center: "title",
           right: "dayGridMonth,timeGridWeek,timeGridDay,listWeek",
+        }}
+        views={{
+          dayGridMonth: {
+            dayMaxEvents: 4,
+          },
+          listWeek: {
+            listDayFormat: { weekday: "long" },
+            listDaySideFormat: { month: "short", day: "numeric" },
+            displayEventTime: true,
+            displayEventEnd: true,
+          },
         }}
         editable={true}
         selectable={true}
@@ -177,7 +215,9 @@ const Calendar: React.FC<CalendarProps> = ({
         select={handleDateSelect}
         eventClick={handleEventClick}
         datesSet={handleDatesSet}
+        viewDidMount={handleViewChange}
         height="auto"
+        contentHeight="auto"
         nowIndicator={true}
         eventTimeFormat={{
           hour: "numeric",
@@ -190,20 +230,12 @@ const Calendar: React.FC<CalendarProps> = ({
         allDayText="All day"
         slotDuration="00:30:00"
         eventDisplay="block"
-      />
-
-      <EventModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSave={handleSave}
-        onDelete={handleDelete}
-        initialData={selectedEvent}
-        mode={modalMode}
-        selectedDate={selectedDate}
-        isSubmitting={isLoading}
+        listDayFormat={{ weekday: "long" }}
+        listDaySideFormat={{ day: "numeric", month: "short" }}
+        moreLinkClick={handleMoreLinkClick} // Add this handler for "more" link clicks
       />
     </div>
   );
-};
+});
 
 export default Calendar;
