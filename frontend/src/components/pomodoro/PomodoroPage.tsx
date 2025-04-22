@@ -20,8 +20,8 @@ import TaskInput from "./TaskInput"; // Import TaskInput
 // Define SessionType Enum locally if not imported from types.ts
 enum SessionType {
   FOCUS = "focus",
-  SHORT_BREAK = "short",
-  LONG_BREAK = "long",
+  SHORT_BREAK = "short_break",
+  LONG_BREAK = "long_break",
 }
 
 // Simple local time formatter
@@ -209,14 +209,15 @@ const PomodoroPage: React.FC = () => {
         .catch((e) => console.error("Audio play failed:", e));
     document.title = "Time's up! - FocusBuddy";
 
-    if (currentSessionId) {
+    // Only complete sessions in backend if it was a focus session
+    if (sessionType === SessionType.FOCUS && currentSessionId) {
       try {
         const response = await PomodoroService.completeSession(
           currentSessionId,
           { completedCycles: cycles }
         );
         if (response.data.success) {
-          if (sessionType === SessionType.FOCUS && currentTaskId) {
+          if (currentTaskId) {
             await updateTaskTime(currentTaskId, customTime);
           }
           fetchSessionHistory();
@@ -229,11 +230,13 @@ const PomodoroPage: React.FC = () => {
       }
     }
 
+    // Only show task completion modal for focus sessions with an active task
     if (sessionType === SessionType.FOCUS && currentTaskId && currentTask) {
       setCompletingTask({ id: currentTaskId, title: currentTask });
       setShowTaskCompletionModal(true);
     }
 
+    // Update cycle count and switch session type regardless of session type
     if (sessionType === SessionType.FOCUS) {
       const newCycles = cycles + 1;
       setCycles(newCycles);
@@ -410,19 +413,24 @@ const PomodoroPage: React.FC = () => {
     setTotalPausedTime(0);
     setIsPaused(false);
     setIsActive(true);
-    try {
-      const payload = {
-        duration: durationMinutes,
-        type: sessionType,
-        taskId: sessionType === SessionType.FOCUS ? currentTaskId : null,
-      };
-      const response = await PomodoroService.startSession(payload);
-      if (response.data.success) setCurrentSessionId(response.data.data._id);
-      else setIsActive(false);
-    } catch (error) {
-      console.error("Error starting session:", error);
-      setIsActive(false);
+
+    // Only make API call for focus sessions
+    if (sessionType === SessionType.FOCUS) {
+      try {
+        const payload = {
+          duration: durationMinutes,
+          type: sessionType,
+          taskId: currentTaskId,
+        };
+        const response = await PomodoroService.startSession(payload);
+        if (response.data.success) setCurrentSessionId(response.data.data._id);
+        else setIsActive(false);
+      } catch (error) {
+        console.error("Error starting session:", error);
+        setIsActive(false);
+      }
     }
+    // For break sessions, just set local state but don't call API
   };
 
   const handlePauseTimer = () => {
@@ -440,7 +448,9 @@ const PomodoroPage: React.FC = () => {
   const handleResetTimer = async () => {
     if (animationFrameRef.current)
       cancelAnimationFrame(animationFrameRef.current);
-    if (isActive && currentSessionId) {
+
+    // Only cancel sessions in backend for focus sessions
+    if (isActive && currentSessionId && sessionType === SessionType.FOCUS) {
       try {
         await PomodoroService.cancelSession(currentSessionId);
         fetchSessionHistory();
@@ -451,12 +461,14 @@ const PomodoroPage: React.FC = () => {
         setCurrentSessionId(null);
       }
     }
+
     setIsActive(false);
     setIsPaused(false);
     setStartTime(null);
     setPausedAt(null);
     setTotalPausedTime(0);
-    setTimerCompleted(false); // setCycles(0); // Optional reset
+    setTimerCompleted(false);
+
     let defaultMinutes =
       sessionType === SessionType.FOCUS
         ? customTime

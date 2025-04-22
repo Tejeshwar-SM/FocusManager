@@ -16,6 +16,7 @@ dotenv.config();
 
 const app: Express = express();
 const PORT = process.env.PORT || 5000;
+// const PORT = process.env.PORT || 8081 // AWS EB default port;
 
 // Create HTTP server
 const server = http.createServer(app);
@@ -27,6 +28,9 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
     credentials: true,
   },
+  // //settings for AWS EB
+  // transports: ["websocket", "polling"],
+  // pingTimeout: 60000,
 });
 
 // Store Socket.IO instance for access in other files

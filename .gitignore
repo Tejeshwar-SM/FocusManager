@@ -6,3 +6,5 @@ dist
 build
 ./frontend/.env.local
 TODOS.md
+.ebextensions
+Procfile

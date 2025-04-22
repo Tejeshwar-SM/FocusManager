@@ -6,8 +6,8 @@ import styles from "../../styles/pomodoro/PomodoroPage.module.css"; // Or use Po
 // Define SessionType Enum locally if not imported
 enum SessionType {
   FOCUS = "focus",
-  SHORT_BREAK = "short",
-  LONG_BREAK = "long",
+  SHORT_BREAK = "short_break",
+  LONG_BREAK = "long_break",
 }
 
 interface SessionTypeSelectorProps {

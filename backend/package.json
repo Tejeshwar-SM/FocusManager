@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
+    "postinstall": "npm run build",
     "dev": "tsc-watch --onSuccess \"nodemon dist/server.js\""
   },
   "keywords": [],
