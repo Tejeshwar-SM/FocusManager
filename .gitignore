@@ -8,3 +8,5 @@ build
 TODOS.md
 .ebextensions
 Procfile
+.env.local.backup
+.env.production
